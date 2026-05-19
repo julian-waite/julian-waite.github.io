@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Julian Waite — Commercial Leadership & Applied Behavioural Psychology</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0e0c; --surface: #171613; --border: rgba(255,255,255,0.08);
+    --text-primary: #f0ece4; --text-secondary: #9a9690; --text-muted: #5a5854;
+    --accent: #c9a96e; --serif: 'Playfair Display', Georgia, serif; --sans: 'DM Sans', system-ui, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text-primary); font-family: var(--sans); font-weight: 300; line-height: 1.7; }
+  nav { padding: 1.25rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .nav-mark { font-family: var(--serif); font-size: 1.1rem; color: var(--text-primary); letter-spacing: 0.02em; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text-primary); }
+  .hero { display: grid; grid-template-columns: 1fr 1fr; align-items: start; padding: 4rem 3rem; gap: 4rem; max-width: 1200px; margin: 0 auto; }
+  .hero-eyebrow { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+  .hero-eyebrow::before { content: ''; display: block; width: 2rem; height: 1px; background: var(--accent); }
+  .hero-name { font-family: var(--serif); font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 400; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-primary); margin-bottom: 1.25rem; }
+  .hero-tagline { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; max-width: 46ch; margin-bottom: 2.5rem; font-weight: 300; }
+  .hero-cta-group { display: flex; gap: 1rem; align-items: center; }
+  .btn-primary { background: var(--accent); color: #0f0e0c; padding: 0.75rem 1.75rem; border-radius: 2px; text-decoration: none; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+  .btn-ghost:hover { color: var(--text-primary); }
+  .btn-ghost::after { content: '→'; }
+  .hero-right { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--border); }
+  .stat-row { padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+  .stat-value { font-family: var(--serif); font-size: 1.2rem; color: var(--text-primary); font-weight: 400; }
+  .stat-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.6; }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 0.5rem; }
+  section { max-width: 1200px; margin: 0 auto; padding: 4rem 3rem; }
+  .section-header { display: flex; align-items: baseline; gap: 1.5rem; margin-bottom: 3rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+  .section-number { font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; }
+  .section-title { font-family: var(--serif); font-size: 1.75rem; font-weight: 400; color: var(--text-primary); }
+  .about-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 4rem; align-items: start; }
+  .about-body { font-size: 1rem; color: var(--text-secondary); line-height: 1.85; }
+  .about-body p + p { margin-top: 1.25rem; }
+  .about-sidebar { display: flex; flex-direction: column; border: 1px solid var(--border); }
+  .sidebar-item { padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border); }
+  .sidebar-item:last-child { border-bottom: none; }
+  .sidebar-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
+  .sidebar-value { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+  .projects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .project-card { background: var(--surface); padding: 1.75rem 2rem; text-decoration: none; display: block; transition: background 0.2s; }
+  .project-card:hover { background: rgba(255,255,255,0.03); }
+  .project-tag { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+  .project-title { font-family: var(--serif); font-size: 1.2rem; font-weight: 400; color: var(--text-primary); margin-bottom: 0.65rem; line-height: 1.3; }
+  .project-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.65; }
+  .project-meta { margin-top: 1.25rem; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); display: flex; gap: 1rem; align-items: center; }
+  .project-status { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .interests-featured { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-bottom: none; }
+  .interests-supporting { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-top: none; }
+  .interest-item { background: var(--surface); padding: 1.75rem; }
+  .interest-item.featured { padding: 2.25rem; }
+  .interest-num { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.65rem; }
+  .interest-title { font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 400; }
+  .interest-item.featured .interest-title { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 0.75rem; }
+  .interest-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.65; }
+  .interest-item.featured .interest-desc { font-size: 0.88rem; }
+  .interest-label { display: inline-block; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid rgba(201,169,110,0.3); padding: 0.2rem 0.6rem; border-radius: 2px; margin-bottom: 1rem; }
+  .contact-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
+  .contact-copy { font-size: 1rem; color: var(--text-secondary); line-height: 1.85; }
+  .contact-copy p + p { margin-top: 1rem; }
+  .contact-links { display: flex; flex-direction: column; border: 1px solid var(--border); }
+  .contact-link { display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border); text-decoration: none; transition: background 0.15s; }
+  .contact-link:last-child { border-bottom: none; }
+  .contact-link:hover { background: rgba(255,255,255,0.03); }
+  .contact-link-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+  .contact-link-value { font-size: 0.88rem; color: var(--text-secondary); }
+  .contact-link:hover .contact-link-value { color: var(--text-primary); }
+  .full-divider { border: none; border-top: 1px solid var(--border); max-width: 1200px; margin: 0 auto; }
+  footer { border-top: 1px solid var(--border); padding: 1.5rem 3rem; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .footer-mark { font-family: var(--serif); font-size: 0.9rem; color: var(--text-muted); }
+  .footer-note { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.05em; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-eyebrow { animation: fadeUp 0.6s ease both; }
+  .hero-name { animation: fadeUp 0.6s 0.1s ease both; }
+  .hero-tagline { animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-cta-group { animation: fadeUp 0.6s 0.3s ease both; }
+  .hero-right { animation: fadeUp 0.6s 0.25s ease both; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-mark">Julian Waite</span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#interests">Interests</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Wokingham</p>
+    <h1 class="hero-name">Julian<br>Waite</h1>
+    <p class="hero-tagline">
+      Following twenty years in the corporate world, with the last ten of those as a people leader, I'm now looking for my next challenge. To get there I'm bringing together a few things I really care about: the psychology behind our motivation, that drives performance and helps us live more meaningful lives, alongside a lifelong love of technology — as long as it serves a purpose. I've never had much time for tech that just screams for attention. Bringing these together feels uniquely me and I hope this will be the beginning of something that will stand the test of time. For now I'm taking it one step at a time — building, learning and seeing where it leads.
+    </p>
+    <div class="hero-cta-group">
+      <a href="#projects" class="btn-primary">See the work</a>
+      <a href="#contact" class="btn-ghost">Get in touch</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="stat-row">
+      <p class="stat-label">Experience</p>
+      <p class="stat-value">20+ years</p>
+      <p class="stat-sub">Commercial & people leadership in tech</p>
+    </div>
+    <div class="stat-row">
+      <p class="stat-label">Current focus</p>
+      <p class="stat-value">Applied Behavioural Psychology</p>
+      <p class="stat-sub">BSc Psychology · Open University<br>UCL Behaviour Change (COM-B)</p>
+    </div>
+    <div class="stat-row">
+      <p class="stat-label">Building in public</p>
+      <p class="stat-value">AI-powered tools</p>
+      <p class="stat-sub">Practical projects combining tech and human behaviour</p>
+    </div>
+    <div class="stat-row">
+      <p class="stat-label">Status</p>
+      <p class="stat-value"><span class="status-dot"></span>Available for conversation</p>
+      <p class="stat-sub">Consulting · Advisory · Speaking</p>
+    </div>
+  </div>
+</div>
+
+<hr class="full-divider">
+
+<section id="about">
+  <div class="section-header">
+    <span class="section-number">01</span>
+    <h2 class="section-title">About</h2>
+  </div>
+  <div class="about-grid">
+    <div class="about-body">
+      <p>I worked for some great companies that did wonderful things. But the larger they got, the more work seemed to fall into frameworks that felt one size fits all — and the harder it became to do things that actually made a difference to people.</p>
+      <p>My strongest contributions were always the same: hiring really good people and creating an environment where they could perform. Sometimes that meant thinking outside the corporate boxes. What I noticed, again and again, was that people do their best work when they feel a genuine sense of autonomy, when they can master what they're doing and when they're surrounded by colleagues who are engaged and care about the same things. Those conditions are hard to create in a ten thousand person company. But within the microcosm of a well-led team, they're possible — and when you get it right, incredible things are possible.</p>
+      <p>My belief is a simple one: great strategy, great technology and great brands all matter. But none of it lands without the right people to bring it to life. It's the individual on the front line and the first line leader above them where it becomes real, where it gets tested and where it either works or it doesn't. Those are the people I've spent my career closest to — and they're the ones I want to focus on.</p>
+      <p>What I've seen, again and again, is that top performers — the people who want to do good work, who want to achieve their full potential and who want to feel like they're making a real difference — will do their best work and are more likely to stay when the right conditions are in place. Not just the right salary or the right title, but the right environment. One where they feel valued, connected and purposeful. Creating those conditions isn't the soft stuff. It's the thing that actually moves the needle — for the individual and for the business.</p>
+      <p>That's why I want to step out of corporate. That's why I want to take more control over my future. And that's where I think I can make a difference.</p>
+    </div>
+    <div class="about-sidebar">
+      <div class="sidebar-item">
+        <p class="sidebar-label">Background</p>
+        <p class="sidebar-value">Sales & commercial leadership in tech, 20+ years</p>
+      </div>
+      <div class="sidebar-item">
+        <p class="sidebar-label">Studying</p>
+        <p class="sidebar-value">Psychology · Behavioural Psychology<br>Open University · UCL</p>
+      </div>
+      <div class="sidebar-item">
+        <p class="sidebar-label">Interests</p>
+        <p class="sidebar-value">Decision-making · Culture · Motivation · AI · Human behaviour</p>
+      </div>
+      <div class="sidebar-item">
+        <p class="sidebar-label">Currently</p>
+        <p class="sidebar-value">Freelance consulting · Building this portfolio</p>
+      </div>
+      <div class="sidebar-item">
+        <p class="sidebar-label">Based</p>
+        <p class="sidebar-value">Wokingham</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="projects">
+  <div class="section-header">
+    <span class="section-number">02</span>
+    <h2 class="section-title">Projects</h2>
+  </div>
+  <div class="projects-grid">
+    <a href="https://julian-waite.github.io/health/workout_tracker.html" target="_blank" class="project-card">
+      <p class="project-tag">Health & Habits</p>
+      <h3 class="project-title">Workout Tracker</h3>
+      <p class="project-desc">A personal workout logging tool built with React. Tracks sessions, exercises and progress over time. The first project in a deliberate programme of learning to build useful things with AI assistance.</p>
+      <div class="project-meta">
+        <span class="project-status"><span class="status-dot"></span> Live</span>
+        <span>React · GitHub</span>
+      </div>
+    </a>
+    <div class="project-card" style="opacity:0.55;">
+      <p class="project-tag">Health & Habits</p>
+      <h3 class="project-title">Health Dashboard</h3>
+      <p class="project-desc">A personal health metrics dashboard bringing together key data in one view. Built as a companion to the workout tracker — exploring how visualisation changes behaviour and motivation. Coming to GitHub shortly.</p>
+      <div class="project-meta">
+        <span>In progress · React</span>
+      </div>
+    </div>
+    <div class="project-card">
+      <p class="project-tag">This page</p>
+      <h3 class="project-title">Portfolio Homepage</h3>
+      <p class="project-desc">The page you're reading now. Built as part of learning to use AI tools effectively — an exercise in design thinking, positioning and learning in public.</p>
+      <div class="project-meta">
+        <span class="project-status"><span class="status-dot"></span> Live</span>
+        <span>HTML · CSS</span>
+      </div>
+    </div>
+    <div class="project-card" style="opacity:0.4;">
+      <p class="project-tag">Coming soon</p>
+      <h3 class="project-title">Next project</h3>
+      <p class="project-desc">This portfolio is a work in progress. New projects are added as they're built — each one chosen to stretch a skill and explore where technology and human behaviour connect.</p>
+      <div class="project-meta">
+        <span>Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="interests">
+  <div class="section-header">
+    <span class="section-number">03</span>
+    <h2 class="section-title">Areas of interest</h2>
+  </div>
+  <div class="interests-featured">
+    <div class="interest-item featured">
+      <p class="interest-label">Primary focus</p>
+      <p class="interest-num">01</p>
+      <p class="interest-title">Behavioural psychology</p>
+      <p class="interest-desc">We all know we should exercise more and eat better. We rarely do. That gap between knowing and doing is what fascinates me — and it shows up everywhere. In business it's the same question: how do you actually bring people with you in a lasting way, rather than relying on short term incentives or forcing change from the top? What makes people consistently work differently and genuinely believe in what they're doing?</p>
+    </div>
+    <div class="interest-item featured">
+      <p class="interest-label">Primary focus</p>
+      <p class="interest-num">02</p>
+      <p class="interest-title">AI with a human lens</p>
+      <p class="interest-desc">AI is an incredibly powerful tool — but most people use it generically and get generic results. The real opportunity is in learning to use it with intention: knowing the right use cases, asking the right questions and getting results that actually make a difference. That's what I'm working to master — and ultimately what I want to be able to teach others.</p>
+    </div>
+  </div>
+  <div class="interests-supporting">
+    <div class="interest-item">
+      <p class="interest-num">03</p>
+      <p class="interest-title">Commercial psychology</p>
+      <p class="interest-desc">How psychological understanding applies to sales, culture, team dynamics and organisational performance.</p>
+    </div>
+    <div class="interest-item">
+      <p class="interest-num">04</p>
+      <p class="interest-title">People leadership</p>
+      <p class="interest-desc">Two decades of building and leading commercial teams. What good leadership looks like at scale and what the research says about why it works.</p>
+    </div>
+    <div class="interest-item">
+      <p class="interest-num">05</p>
+      <p class="interest-title">Learning & development</p>
+      <p class="interest-desc">How people learn, change and grow — in organisations and in life. The psychology of adult development and midlife transition.</p>
+    </div>
+    <div class="interest-item">
+      <p class="interest-num">06</p>
+      <p class="interest-title">Building in public</p>
+      <p class="interest-desc">Treating learning as something worth sharing, not something to hide until it's finished. This portfolio is that idea in action.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="contact">
+  <div class="section-header">
+    <span class="section-number">04</span>
+    <h2 class="section-title">Get in touch</h2>
+  </div>
+  <div class="contact-inner">
+    <div class="contact-copy">
+      <p>I'm not currently pitching services or looking for a specific type of engagement. But I'm genuinely interested in conversations with people who work where psychology, commercial leadership and technology meet.</p>
+      <p>If something on this page resonates — or if you're working on something that feels relevant — I'd be happy to talk.</p>
+    </div>
+    <div class="contact-links">
+      <a href="https://www.linkedin.com/in/julian-waite" target="_blank" class="contact-link">
+        <span class="contact-link-label">LinkedIn</span>
+        <span class="contact-link-value">julian-waite →</span>
+      </a>
+      <a href="https://github.com/julian-waite" target="_blank" class="contact-link">
+        <span class="contact-link-label">GitHub</span>
+        <span class="contact-link-value">julian-waite →</span>
+      </a>
+      <a href="mailto:julianwaite@hotmail.com" class="contact-link">
+        <span class="contact-link-label">Email</span>
+        <span class="contact-link-value">julianwaite@hotmail.com →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<footer>
+  <span class="footer-mark">Julian Waite</span>
+  <span class="footer-note">Wokingham · Building in public · 2025</span>
+</footer>
+
+</body>
+</html>
