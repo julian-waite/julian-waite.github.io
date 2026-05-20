@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Write Better Prompts — Julian Waite</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #111111;
+    --ink-mid: #444444;
+    --ink-dim: #777777;
+    --ink-muted: #aaaaaa;
+    --rule: #dddddd;
+    --surface: #f7f7f5;
+    --accent: #2d2d8f;
+    --accent-light: #eeeeff;
+    --green-bg: #f0faf4;
+    --green-border: #b6dfc4;
+    --red-bg: #fff5f5;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'Inconsolata', 'Courier New', monospace;
+  }
+
+  /* ── SCREEN ── */
+  body {
+    font-family: var(--sans);
+    font-weight: 400;
+    color: var(--ink);
+    background: #e8e8e8;
+    padding: 2rem;
+    line-height: 1.6;
+  }
+
+  .page {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 14mm 16mm 14mm;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.15);
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .doc-title { font-family: var(--serif); font-size: 22pt; font-weight: 400; line-height: 1.1; color: var(--ink); }
+  .doc-sub { font-size: 9pt; color: var(--ink-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+  .doc-meta { text-align: right; font-size: 8pt; color: var(--ink-muted); line-height: 1.7; }
+
+  /* ── INTRO ── */
+  .intro {
+    font-size: 11pt;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    max-width: 90%;
+  }
+
+  /* ── FORMULA ── */
+  .formula-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 12px;
+    background: var(--accent);
+    overflow: hidden;
+  }
+  .formula-item {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    color: #fff;
+    font-size: 10pt;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border-right: 1px solid rgba(255,255,255,0.2);
+  }
+  .formula-item:last-child { border-right: none; }
+  .formula-item span { display: block; font-size: 9pt; opacity: 0.75; font-weight: 400; margin-top: 2px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* ── PRINCIPLES ── */
+  .principles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+  .principle {
+    border: 0.5px solid var(--rule);
+    padding: 9px 11px;
+    page-break-inside: avoid;
+  }
+
+  .p-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .p-num { font-size: 8pt; color: var(--ink-muted); letter-spacing: 0.1em; font-weight: 500; flex-shrink: 0; width: 18px; }
+  .p-title { font-size: 11pt; font-weight: 500; color: var(--ink); flex: 1; }
+  .p-tag {
+    font-size: 7pt; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 6px; flex-shrink: 0; font-weight: 500;
+  }
+  .tag-f { background: var(--accent-light); color: var(--accent); }
+  .tag-a { background: #fff8e6; color: #7a5800; }
+  .tag-p { background: #edfaf3; color: #1a6b3c; }
+
+  .p-body { display: flex; gap: 10px; }
+  .p-desc { font-size: 11pt; color: var(--ink-mid); line-height: 1.7; flex: 1; }
+  .p-examples { display: flex; flex-direction: column; gap: 5px; flex: 1.1; }
+
+  .ex { padding: 6px 8px; font-size: 10pt; line-height: 1.6; font-family: var(--mono); }
+  .ex-label { font-size: 8.5pt; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; font-family: var(--sans); }
+  .ex.before { background: var(--red-bg); border-left: 2.5px solid #e8a09e; }
+  .ex.before .ex-label { color: #b34040; }
+  .ex.after { background: var(--green-bg); border-left: 2.5px solid var(--green-border); }
+  .ex.after .ex-label { color: #2a7a4a; }
+
+  .p-tip {
+    font-size: 10pt; color: var(--ink-dim); line-height: 1.65;
+    border-top: 0.5px solid var(--rule); margin-top: 6px; padding-top: 5px;
+  }
+  .p-tip strong { color: var(--ink-mid); }
+
+  /* ── CHEATSHEET ── */
+  .cheatsheet {
+    background: var(--surface);
+    border: 0.5px solid var(--rule);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .cs-title { font-size: 10pt; font-weight: 500; color: var(--ink); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+  .cs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px 12px; }
+  .cs-item { font-size: 10pt; color: var(--ink-mid); line-height: 1.55; display: flex; gap: 5px; align-items: baseline; }
+  .cs-item::before { content: '→'; color: var(--ink-muted); flex-shrink: 0; font-size: 7.5pt; }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 0.5px solid var(--rule);
+    padding-top: 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-text { font-size: 7.5pt; color: var(--ink-muted); letter-spacing: 0.05em; }
+  .footer-url { font-size: 7.5pt; color: var(--accent); }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; margin: 0; width: 100%; min-height: auto; padding: 12mm 14mm 12mm; }
+    .print-btn { display: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  /* ── SCREEN ONLY ── */
+  .print-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    width: 210mm;
+    text-align: right;
+  }
+  .print-btn button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  .print-btn button:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<div class="print-btn">
+  <button onclick="window.print()">Print / Save as PDF →</button>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div>
+      <div class="doc-title">How to Write Better Prompts</div>
+      <div class="doc-sub">A practical guide to getting the best from Claude and other AI tools</div>
+    </div>
+    <div class="doc-meta">
+      julian-waite.github.io<br>
+      Prompt Engineer — Challenge Mode
+    </div>
+  </div>
+
+  <p class="intro">Seven principles in order of impact. The first three will improve every prompt you write today. The last four separate good prompts from exceptional ones. Each principle includes a before/after example so you can see the difference in practice.</p>
+
+  <!-- The formula bar -->
+  <div class="formula-bar">
+    <div class="formula-item">Task<span>What to do</span></div>
+    <div class="formula-item">+ Context<span>Why & who for</span></div>
+    <div class="formula-item">+ Format<span>How to present it</span></div>
+    <div class="formula-item">+ Constraints<span>Length, tone, limits</span></div>
+    <div class="formula-item">= Great prompt<span>Specific, useful output</span></div>
+  </div>
+
+  <!-- Principles -->
+  <div class="principles">
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">01</span>
+        <span class="p-title">Be specific about the output, not just the task</span>
+        <span class="p-tag tag-f">Foundation</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">The single biggest lever. Most prompts describe what to do but not what the result should look like. Specify format, length, tone, and structure — Claude will follow them precisely.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>Write me a summary of behavioural economics.</div>
+          <div class="ex after"><div class="ex-label">After</div>Write a 3-paragraph summary of behavioural economics for a non-academic audience. Plain English, no jargon. Cover: what it is, why it matters, one real-world example.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Rule of thumb:</strong> If you would brief a human writer with these details, brief Claude the same way.</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">02</span>
+        <span class="p-title">Give Claude the context it needs to do a great job</span>
+        <span class="p-tag tag-f">Foundation</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">Claude knows nothing about your situation unless you tell it. Who is this for? What's the purpose? What constraints are you working within? Context transforms generic answers into useful ones.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>Help me write an email about a delayed project.</div>
+          <div class="ex after"><div class="ex-label">After</div>Help me write to a senior stakeholder at a law firm about a 3-week CRM delay caused by data migration. Relationship is strong but professional. Transparent but confident — not defensive.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Ask yourself:</strong> What would someone need to know before they could give me genuinely useful advice on this?</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">03</span>
+        <span class="p-title">Say who the audience is</span>
+        <span class="p-tag tag-f">Foundation</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">The same information explained to a PhD researcher and a school student should look completely different. Audience shapes vocabulary, depth, examples and assumptions. Skip this and Claude guesses.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>Explain the COM-B model.</div>
+          <div class="ex after"><div class="ex-label">After</div>Explain COM-B to a senior HR director with no psychology background but strong commercial instincts. Use a workplace example. No academic language.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Useful signals:</strong> role, expertise level, familiarity with topic, what they care about, what they already know.</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">04</span>
+        <span class="p-title">Ask for one thing at a time</span>
+        <span class="p-tag tag-a">Advanced</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">Multi-part prompts produce unfocused answers. Claude tries to do everything at once and does each part less well. If you need multiple things, ask sequentially or structure the priority clearly.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>Help with my LinkedIn profile, write a cover letter, and give me salary negotiation advice.</div>
+          <div class="ex after"><div class="ex-label">After</div>Let's take these one at a time. First: review my LinkedIn headline and suggest three alternatives that position me as a behavioural science consultant rather than a sales leader.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Exception:</strong> Related things that belong together are fine — a brief, a structured plan, a sectioned document.</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">05</span>
+        <span class="p-title">Tell Claude what role or perspective to take</span>
+        <span class="p-tag tag-a">Advanced</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">Claude can reason from many positions — coach, critic, domain expert, devil's advocate. Specifying a role shapes not just the tone but the entire frame of reference used to construct the answer.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>What do you think of this business idea?</div>
+          <div class="ex after"><div class="ex-label">After</div>Act as a sceptical investor who has seen many behaviour change startups fail. Give me your three biggest concerns. Be direct — I need challenge, not validation.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Useful roles:</strong> expert in [field], devil's advocate, experienced editor, someone who disagrees, a first-time reader who knows nothing about this.</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">06</span>
+        <span class="p-title">Use structure to organise complex prompts</span>
+        <span class="p-tag tag-a">Advanced</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">For longer prompts, structure helps Claude process what you need. Separate context from task from constraints. Use labels. The more organised your prompt, the more organised the answer.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>I've got 20 years in sales and I study psychology and want to build a business and know how to position myself and what to offer...</div>
+          <div class="ex after"><div class="ex-label">After</div>Background: 20 years commercial leadership, studying applied psychology.
+Goal: Niche consulting at the intersection of sales and behavioural science.
+Task: Suggest 3 positioning angles, with a one-sentence description and target client for each.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Labels that help:</strong> Background / Goal / Task / Constraints / Format / Tone. Use only what's relevant.</div>
+    </div>
+
+    <div class="principle">
+      <div class="p-header">
+        <span class="p-num">07</span>
+        <span class="p-title">Iterate — treat the first response as a draft</span>
+        <span class="p-tag tag-p">Power</span>
+      </div>
+      <div class="p-body">
+        <div class="p-desc">The best results rarely come from one prompt. Use the first response as a starting point, then refine: make it shorter, change the tone, go deeper on one section, try a different angle.</div>
+        <div class="p-examples">
+          <div class="ex before"><div class="ex-label">Before</div>[Reads response] OK that's fine I guess.</div>
+          <div class="ex after"><div class="ex-label">After</div>Good start. Now: shorten the first paragraph by half, make the tone less formal, and add a concrete example to point three. Keep everything else the same.</div>
+        </div>
+      </div>
+      <div class="p-tip"><strong>Useful follow-ups:</strong> "Make this more [concise/direct/conversational]" · "Expand on point 2" · "Rewrite for [audience]" · "What have you left out?"</div>
+    </div>
+
+  </div>
+
+  <!-- Cheatsheet -->
+  <div class="cheatsheet">
+    <div class="cs-title">Before you submit — quick checklist</div>
+    <div class="cs-grid">
+      <div class="cs-item">Have I said what format I want?</div>
+      <div class="cs-item">Have I given the context needed?</div>
+      <div class="cs-item">Have I specified the audience?</div>
+      <div class="cs-item">Have I said what tone I want?</div>
+      <div class="cs-item">Is the task actually clear?</div>
+      <div class="cs-item">Have I said what length is right?</div>
+      <div class="cs-item">Am I asking one thing, or too many?</div>
+      <div class="cs-item">Would a specific example help?</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    <span class="footer-text">Julian Waite · Building in public · Wokingham</span>
+    <span class="footer-url">julian-waite.github.io/prompt-trainer.html</span>
+  </div>
+
+</div>
+
+</body>
+</html>
