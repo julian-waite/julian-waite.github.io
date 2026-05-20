@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)file:///Users/julianwaite/Downloads/prompt-trainer_15.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineer — Challenge Mode</title>
+<link href="./Prompt Engineer — Challenge Mode_files/css2" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --surface2: #1a1a24;
+    --border: rgba(255,255,255,0.07); --border-hi: rgba(255,255,255,0.15);
+    --text: #e8e6f0; --dim: #7a7890; --muted: #3a384a;
+    --accent: #7c6fff; --accent-dim: rgba(124,111,255,0.15); --accent-glow: rgba(124,111,255,0.4);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.12);
+    --amber: #fbbf24; --amber-dim: rgba(251,191,36,0.12);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.12);
+    --mono: 'Inconsolata', monospace; --display: 'Syne', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); line-height: 1.6; min-height: 100vh; }
+
+  /* KEY SCREEN */
+  #keyScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+  .key-box { max-width: 480px; width: 100%; }
+  .key-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; }
+  .key-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+  .key-logo-text { font-family: var(--display); font-size: 0.95rem; font-weight: 800; letter-spacing: 0.05em; }
+  .key-title { font-family: var(--display); font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem; line-height: 1.2; }
+  .key-desc { font-size: 0.88rem; color: var(--dim); line-height: 1.75; margin-bottom: 1.5rem; }
+  .key-panel { border: 1px solid var(--border-hi); background: var(--surface); padding: 1.75rem; margin-bottom: 1rem; }
+  .key-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; display: block; }
+  .key-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border-hi);
+    color: var(--text); font-family: var(--mono); font-size: 0.88rem;
+    padding: 0.75rem 1rem; outline: none; margin-bottom: 0.75rem; transition: border-color 0.2s;
+  }
+  .key-input:focus { border-color: var(--accent); }
+  .key-error { display: none; font-size: 0.78rem; color: var(--red); margin-bottom: 0.75rem; }
+  .key-btn {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    padding: 0.85rem; font-family: var(--display); font-size: 0.82rem;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  }
+  .key-btn:hover { opacity: 0.85; }
+  .key-note { border: 1px solid var(--border); background: var(--surface); padding: 1.25rem; font-size: 0.78rem; color: var(--dim); line-height: 1.7; }
+  .key-note a { color: var(--accent); }
+
+  /* APP */
+  #appScreen { display: none; }
+  header { padding: 1.1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .logo { font-family: var(--display); font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+  .header-meta { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  main { max-width: 860px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+  /* PROGRESS */
+  .progress { display: flex; gap: 4px; margin-bottom: 1.5rem; }
+  .pip { height: 2px; flex: 1; background: var(--surface2); border-radius: 1px; transition: background 0.3s; }
+  .pip.done { background: var(--accent); }
+  .pip.active { background: var(--accent); opacity: 0.4; }
+
+  /* CHALLENGE CARD */
+  .challenge-card { background: var(--surface); border: 1px solid var(--border-hi); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .c-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  .c-num { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.35rem; }
+  .c-title { font-family: var(--display); font-size: 1.4rem; font-weight: 800; margin-bottom: 0.6rem; }
+  .c-desc { font-size: 0.88rem; color: var(--dim); line-height: 1.75; margin-bottom: 0.75rem; }
+  .c-context { font-size: 0.82rem; color: var(--dim); line-height: 1.7; padding: 0.75rem 1rem; border-left: 2px solid var(--accent); background: var(--surface2); margin-bottom: 0.75rem; }
+  .badge { display: inline-block; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; }
+  .badge.easy { background: var(--green-dim); color: var(--green); }
+  .badge.medium { background: var(--amber-dim); color: var(--amber); }
+  .badge.hard { background: var(--red-dim); color: var(--red); }
+
+  /* INPUT */
+  .input-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; display: block; }
+  textarea { width: 100%; min-height: 120px; background: var(--surface); border: 1px solid var(--border-hi); color: var(--text); font-family: var(--mono); font-size: 0.88rem; line-height: 1.7; padding: 0.85rem 1rem; resize: vertical; outline: none; transition: border-color 0.2s; }
+  textarea:focus { border-color: var(--accent); }
+  textarea:disabled { opacity: 0.5; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  .btn { padding: 0.6rem 1.4rem; font-size: 0.78rem; font-family: var(--mono); border: 1px solid var(--border-hi); background: transparent; color: var(--text); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
+  .btn:hover:not(:disabled) { background: var(--surface2); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover:not(:disabled) { opacity: 0.85; }
+
+  /* LOADING */
+  .loading { display: none; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: var(--muted); padding: 1rem 0; }
+  .loading.on { display: flex; }
+  .spinner { width: 14px; height: 14px; border: 1.5px solid var(--border-hi); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULTS */
+  .results { display: none; margin-top: 1.25rem; }
+  .results.on { display: block; }
+  .score-panel { background: var(--surface); border: 1px solid var(--border-hi); padding: 1.25rem; margin-bottom: 1rem; }
+  .score-header { display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
+  .score-big { font-family: var(--display); font-size: 3.5rem; font-weight: 800; line-height: 1; }
+  .score-big.high { color: var(--green); } .score-big.mid { color: var(--amber); } .score-big.low { color: var(--red); }
+  .score-sublabel { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  .bars { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .bar-row { display: flex; flex-direction: column; gap: 3px; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--dim); }
+  .bar-label span:last-child { color: var(--text); font-weight: 500; }
+  .bar-track { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.7s cubic-bezier(0.16,1,0.3,1); width: 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 1rem; }
+  .col { background: var(--surface); padding: 1rem; }
+  .col-label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .col-label.good { color: var(--green); } .col-label.bad { color: var(--red); }
+  .col ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .col li { font-size: 0.82rem; color: var(--dim); line-height: 1.6; padding-left: 12px; position: relative; }
+  .col li::before { content: '—'; position: absolute; left: 0; color: var(--muted); }
+  .verdict-block { background: var(--surface); border: 1px solid var(--border-hi); padding: 1rem; margin-bottom: 1rem; }
+  .block-label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .verdict-text { font-size: 0.88rem; color: var(--dim); line-height: 1.75; }
+  .improved-block { border: 1px solid rgba(124,111,255,0.4); background: var(--accent-dim); padding: 1rem; margin-bottom: 1rem; }
+  .improved-label { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  .improved-text { font-size: 0.82rem; color: var(--text); line-height: 1.75; white-space: pre-wrap; font-family: var(--mono); }
+
+  /* COMPLETE */
+  #completeScreen { display: none; padding: 2rem 0; }
+  .complete-header { text-align: center; margin-bottom: 2rem; }
+  .complete-title { font-family: var(--display); font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .complete-score { font-family: var(--display); font-size: 4rem; font-weight: 800; color: var(--accent); }
+  .complete-sub { font-size: 0.82rem; color: var(--muted); }
+  .insight-panel { margin-top: 1.5rem; }
+  .tips-block { border: 1px solid var(--border-hi); background: var(--surface); padding: 1.5rem; margin-bottom: 1rem; }
+  .tips-title { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.25rem; }
+  .tip { padding-bottom: 1.1rem; border-bottom: 1px solid var(--border); margin-bottom: 1.1rem; }
+  .tip:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .tip-num { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+  .tip-title { font-family: var(--display); font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .tip-desc { font-size: 0.84rem; color: var(--dim); line-height: 1.75; margin-bottom: 0.4rem; }
+  .tip-action { font-size: 0.78rem; color: var(--accent); font-style: italic; }
+  .log-block { border: 1px solid var(--border-hi); background: var(--surface); padding: 1.5rem; margin-bottom: 1rem; }
+  .log-title { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.25rem; }
+  .log-item { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .log-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .log-meta { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+  .log-score { font-size: 0.7rem; padding: 1px 6px; border-radius: 2px; }
+  .log-score.high { background: var(--green-dim); color: var(--green); }
+  .log-score.mid { background: var(--amber-dim); color: var(--amber); }
+  .log-score.low { background: var(--red-dim); color: var(--red); }
+  .log-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+  .log-col { background: var(--surface2); padding: 0.85rem; }
+  .log-col-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+  .log-col.expert .log-col-label { color: var(--accent); }
+  .log-col-text { font-size: 0.78rem; color: var(--dim); line-height: 1.65; white-space: pre-wrap; font-family: var(--mono); }
+  .log-col.expert .log-col-text { color: var(--text); }
+
+  @media (max-width: 600px) {
+    main { padding: 1.5rem 1rem 4rem; }
+    header { padding: 0.9rem 1rem; }
+    .two-col, .log-cols { grid-template-columns: 1fr; }
+    .score-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- KEY SCREEN -->
+<div id="keyScreen" style="display: none;">
+  <div class="key-box">
+    <div class="key-logo">
+      <div class="key-dot"></div>
+      <span class="key-logo-text">Prompt Engineer</span>
+    </div>
+    <h1 class="key-title">Challenge Mode</h1>
+    <p class="key-desc">Five challenges. Write your best prompt for each task. Claude scores you on clarity, specificity, context and structure — then shows you what an expert prompt looks like.</p>
+    <div class="key-panel">
+      <label class="key-label" for="apiKeyInput">Anthropic API Key</label>
+      <input class="key-input" type="password" id="apiKeyInput" placeholder="sk-ant-...">
+      <p class="key-error" id="keyError"></p>
+      <button class="key-btn" id="startBtn">Start challenges →</button>
+    </div>
+    <div class="key-note">
+      Your key is held in memory for this session and saved to your browser's local storage so you don't need to re-enter it. It is sent directly to Anthropic's API and never stored on any server. Get a key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>.
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen" style="display: block;">
+  <header>
+    <div class="logo"><span class="logo-dot"></span> Prompt Engineer</div>
+    <span class="header-meta">Challenge Mode</span>
+  </header>
+  <main>
+    <div class="progress" id="progressBar"><div class="pip active"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+
+    <div id="challengeView">
+      <div class="challenge-card">
+        <div class="c-label">Active challenge</div>
+        <div class="c-num" id="cNum">Challenge 1 of 5</div>
+        <div class="c-title" id="cTitle">Explain a complex idea simply</div>
+        <div class="c-desc" id="cDesc">Get Claude to explain loss aversion to someone with no psychology background — in a way they will actually remember.</div>
+        <div class="c-context" id="cContext">You are preparing a workshop for a sales team. They need to understand why customers fear losing something more than they value gaining something equivalent. The explanation needs to be memorable and practical, not academic.</div>
+        <span class="badge easy" id="cBadge">Easy</span>
+      </div>
+
+      <label class="input-label" for="promptInput">Your prompt</label>
+      <textarea id="promptInput" placeholder="Write your prompt here. Every word counts."></textarea>
+
+      <div class="btn-row">
+        <button class="btn primary" id="submitBtn">Submit for scoring →</button>
+      </div>
+
+      <div class="loading" id="loadingEl">
+        <div class="spinner"></div>
+        <span>Claude is evaluating your prompt...</span>
+      </div>
+
+      <div class="results" id="resultsEl">
+        <div class="score-panel">
+          <div class="score-header">
+            <div>
+              <div class="score-big" id="scoreBig"></div>
+              <div class="score-sublabel">out of 100</div>
+            </div>
+            <div class="bars" id="barsEl"></div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="col">
+            <div class="col-label good">What worked</div>
+            <ul id="strengthsEl"></ul>
+          </div>
+          <div class="col">
+            <div class="col-label bad">What to improve</div>
+            <ul id="weaknessesEl"></ul>
+          </div>
+        </div>
+        <div class="verdict-block">
+          <div class="block-label">Verdict</div>
+          <div class="verdict-text" id="verdictEl"></div>
+        </div>
+        <div class="improved-block">
+          <div class="improved-label">Expert rewrite — learn from this</div>
+          <div class="improved-text" id="improvedEl"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="nextBtn">Next challenge →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="completeScreen">
+      <div class="complete-header">
+        <div class="complete-title">Session complete</div>
+        <div class="complete-score" id="finalScore"></div>
+        <div class="complete-sub">average score across all 5 challenges</div>
+      </div>
+
+      <div class="loading" id="insightLoading">
+        <div class="spinner"></div>
+        <span>Claude is analysing your session...</span>
+      </div>
+
+      <div class="insight-panel" id="insightPanel" style="display:none;">
+        <div class="tips-block">
+          <div class="tips-title">Your 3 focus areas</div>
+          <div id="tipsEl"></div>
+        </div>
+        <div class="log-block">
+          <div class="log-title">Session log — your prompts vs expert rewrites</div>
+          <div id="logEl"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="downloadBtn">Download worksheet →</button>
+          <button class="btn" id="restartBtn">Start again</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── STATE ──
+var API_KEY = '';
+var currentIndex = 0;
+var scores = [];
+var sessionResults = [];
+
+var CHALLENGES = [
+  {
+    title: "Explain a complex idea simply",
+    desc: "Get Claude to explain loss aversion to someone with no psychology background — in a way they will actually remember.",
+    context: "You are preparing a workshop for a sales team. They need to understand why customers fear losing something more than they value gaining something equivalent. The explanation needs to be memorable and practical, not academic.",
+    difficulty: "easy"
+  },
+  {
+    title: "Generate structured output",
+    desc: "Get Claude to produce a 5-day onboarding plan for a new Sales Development Representative — in a format ready to hand to HR.",
+    context: "You are a sales director at a 50-person B2B SaaS company. The SDR starts Monday. You want a structured plan covering knowledge, skills and culture — clean enough to hand directly to HR without editing.",
+    difficulty: "medium"
+  },
+  {
+    title: "Adopt a specific persona",
+    desc: "Get Claude to write a LinkedIn post in your voice announcing a career pivot from sales leadership into behavioural science consulting.",
+    context: "You want the post to feel authentic, not corporate. It should acknowledge the uncertainty of the move while making clear it is a deliberate choice. Tone: reflective, confident, human. No buzzwords. Around 200 words.",
+    difficulty: "medium"
+  },
+  {
+    title: "Extract insight from ambiguity",
+    desc: "Get Claude to identify the three most likely psychological reasons why a high-performing sales team's results have suddenly dropped.",
+    context: "A team of 8, consistently hitting 110% quota for 18 months, has dropped to 74% over the last two quarters. No changes to territory, product or compensation. A new manager joined six months ago. Get Claude to reason through causes, rank by likelihood and suggest diagnostic questions.",
+    difficulty: "hard"
+  },
+  {
+    title: "Chain reasoning across a framework",
+    desc: "Get Claude to design a behaviour change intervention using the COM-B model for a specific real-world problem.",
+    context: "A professional services firm wants to improve knowledge sharing between teams. People have the knowledge but do not share it. Apply COM-B (Capability, Opportunity, Motivation-Behaviour) to diagnose why the behaviour is not happening and recommend targeted interventions for each component.",
+    difficulty: "hard"
+  }
+];
+
+// ── BOOT ──
+window.addEventListener('load', function() {
+  document.getElementById('startBtn').addEventListener('click', initApp);
+  document.getElementById('apiKeyInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') initApp();
+  });
+  document.getElementById('submitBtn').addEventListener('click', submitPrompt);
+  document.getElementById('nextBtn').addEventListener('click', nextChallenge);
+  document.getElementById('downloadBtn').addEventListener('click', downloadWorksheet);
+  document.getElementById('restartBtn').addEventListener('click', restartSession);
+
+  // Check localStorage for saved key
+  try {
+    var saved = localStorage.getItem('pe_api_key');
+    if (saved && saved.indexOf('sk-') === 0) {
+      API_KEY = saved;
+      showApp();
+    }
+  } catch(e) {}
+});
+
+function initApp() {
+  var key = document.getElementById('apiKeyInput').value.trim();
+  var errEl = document.getElementById('keyError');
+  if (key.indexOf('sk-') !== 0) {
+    errEl.textContent = "Keys start with sk- — check and try again";
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  API_KEY = key;
+  try { localStorage.setItem('pe_api_key', key); } catch(e) {}
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('keyScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  loadChallenge();
+}
+
+// ── CHALLENGE ──
+function loadChallenge() {
+  var c = CHALLENGES[currentIndex];
+  document.getElementById('cNum').textContent = 'Challenge ' + (currentIndex + 1) + ' of ' + CHALLENGES.length;
+  document.getElementById('cTitle').textContent = c.title;
+  document.getElementById('cDesc').textContent = c.desc;
+  document.getElementById('cContext').textContent = c.context;
+  var badge = document.getElementById('cBadge');
+  badge.textContent = c.difficulty.charAt(0).toUpperCase() + c.difficulty.slice(1);
+  badge.className = 'badge ' + c.difficulty;
+  document.getElementById('promptInput').value = '';
+  document.getElementById('promptInput').disabled = false;
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('resultsEl').className = 'results';
+  document.getElementById('loadingEl').className = 'loading';
+  renderProgress();
+}
+
+function renderProgress() {
+  var bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  for (var i = 0; i < CHALLENGES.length; i++) {
+    var pip = document.createElement('div');
+    pip.className = 'pip' + (i < currentIndex ? ' done' : i === currentIndex ? ' active' : '');
+    bar.appendChild(pip);
+  }
+}
+
+// ── SUBMIT ──
+async function submitPrompt() {
+  var prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) return;
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('promptInput').disabled = true;
+  document.getElementById('loadingEl').className = 'loading on';
+  document.getElementById('resultsEl').className = 'results';
+
+  var c = CHALLENGES[currentIndex];
+
+  var systemPrompt = 'You are an expert prompt engineering coach. Evaluate the prompt and respond with ONLY valid JSON — no markdown, no extra text.\n\nJSON:\n{\n  "scores": {"clarity":<0-25>,"specificity":<0-25>,"context":<0-25>,"structure":<0-25>},\n  "total":<0-100>,\n  "strengths":["<point>","<point>","<point>"],\n  "weaknesses":["<point>","<point>","<point>"],\n  "verdict":"<2-3 sentence honest assessment>",\n  "improved_prompt":"<Expert rewrite scoring 90+. Write the actual improved prompt.>"\n}\n\nScoring: clarity=unambiguous instruction(0-25), specificity=concrete details like format/tone/length(0-25), context=background Claude needs(0-25), structure=well-organised guidance(0-25).\nBe honest: weak=30-50, average=50-70, strong=70-85, exceptional=85+.';
+
+  var userMsg = 'Challenge: "' + c.title + '"\nContext: ' + c.context + '\n\nLearner prompt:\n"' + prompt + '"';
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.type + ': ' + data.error.message);
+    var raw = data.content.map(function(b) { return b.text || ''; }).join('');
+    var result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    sessionResults.push({ challenge: c, userPrompt: prompt, result: result });
+    scores.push(parseInt(result.total, 10) || 0);
+    showResults(result);
+
+  } catch(e) {
+    document.getElementById('loadingEl').className = 'loading';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('promptInput').disabled = false;
+    alert('Error: ' + e.message);
+  }
+}
+
+function showResults(r) {
+  document.getElementById('loadingEl').className = 'loading';
+
+  var total = parseInt(r.total, 10) || 0;
+  var big = document.getElementById('scoreBig');
+  big.textContent = total;
+  big.className = 'score-big ' + (total >= 75 ? 'high' : total >= 50 ? 'mid' : 'low');
+
+  var dims = [['clarity','Clarity'],['specificity','Specificity'],['context','Context'],['structure','Structure']];
+  document.getElementById('barsEl').innerHTML = dims.map(function(d) {
+    return '<div class="bar-row"><div class="bar-label"><span>' + d[1] + '</span><span>' + r.scores[d[0]] + '/25</span></div><div class="bar-track"><div class="bar-fill" id="bf-' + d[0] + '" style="width:0%"></div></div></div>';
+  }).join('');
+
+  document.getElementById('strengthsEl').innerHTML = r.strengths.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+  document.getElementById('weaknessesEl').innerHTML = r.weaknesses.map(function(w) { return '<li>' + w + '</li>'; }).join('');
+  document.getElementById('verdictEl').textContent = r.verdict;
+  document.getElementById('improvedEl').textContent = r.improved_prompt;
+
+  var isLast = currentIndex === CHALLENGES.length - 1;
+  document.getElementById('nextBtn').textContent = isLast ? 'See final results →' : 'Next challenge →';
+  document.getElementById('resultsEl').className = 'results on';
+
+  requestAnimationFrame(function() {
+    dims.forEach(function(d) {
+      (function(key, val) {
+        var el = document.getElementById('bf-' + key);
+        if (el) setTimeout(function() { el.style.width = (val / 25 * 100) + '%'; }, 80);
+      })(d[0], r.scores[d[0]]);
+    });
+  });
+}
+
+function nextChallenge() {
+  currentIndex++;
+  if (currentIndex >= CHALLENGES.length) {
+    showComplete();
+  } else {
+    loadChallenge();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+// ── COMPLETE ──
+async function showComplete() {
+  document.getElementById('challengeView').style.display = 'none';
+  var avg = Math.round(scores.reduce(function(a,b){return a+b;},0) / scores.length);
+  document.getElementById('finalScore').textContent = avg + '/100';
+  document.getElementById('completeScreen').style.display = 'block';
+  document.getElementById('insightLoading').className = 'loading on';
+
+  var summary = sessionResults.map(function(s, i) {
+    return 'Challenge ' + (i+1) + ': ' + s.challenge.title + ' (Score: ' + s.result.total + '/100)\n' +
+      'Weaknesses: ' + s.result.weaknesses.join('; ') + '\n' +
+      'Verdict: ' + s.result.verdict;
+  }).join('\n\n');
+
+  var system = 'You are an expert prompt engineering coach. Based on a learner\'s session, identify their 3 highest-value improvement areas. Respond with ONLY valid JSON.\n\n{"tips":[{"title":"<short name>","description":"<2-3 sentences on the pattern and why it matters>","action":"<one concrete memorable action to take every time>"}]}';
+  var user = 'Average score: ' + avg + '/100\n\n' + summary + '\n\nIdentify their 3 highest-value improvement areas based on actual performance.';
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        system: system,
+        messages: [{ role: 'user', content: user }]
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    var raw = data.content.map(function(b){return b.text||'';}).join('');
+    var tips = JSON.parse(raw.replace(/```json|```/g,'').trim()).tips;
+    document.getElementById('insightLoading').className = 'loading';
+    renderComplete(tips, avg);
+  } catch(e) {
+    document.getElementById('insightLoading').className = 'loading';
+    document.getElementById('insightPanel').style.display = 'block';
+    document.getElementById('tipsEl').innerHTML = '<p style="color:var(--red);font-size:0.85rem;">Could not generate insights: ' + e.message + '</p>';
+  }
+}
+
+function renderComplete(tips, avg) {
+  document.getElementById('tipsEl').innerHTML = tips.map(function(t, i) {
+    return '<div class="tip"><div class="tip-num">Focus area ' + (i+1) + '</div><div class="tip-title">' + t.title + '</div><div class="tip-desc">' + t.description + '</div><div class="tip-action">→ ' + t.action + '</div></div>';
+  }).join('');
+
+  document.getElementById('logEl').innerHTML = sessionResults.map(function(s, i) {
+    var sc = s.result.total >= 75 ? 'high' : s.result.total >= 50 ? 'mid' : 'low';
+    return '<div class="log-item"><div class="log-meta">Challenge ' + (i+1) + ' — ' + s.challenge.title + '<span class="log-score ' + sc + '">' + s.result.total + '/100</span></div><div class="log-cols"><div class="log-col"><div class="log-col-label">Your prompt</div><div class="log-col-text">' + esc(s.userPrompt) + '</div></div><div class="log-col expert"><div class="log-col-label">Expert rewrite</div><div class="log-col-text">' + esc(s.result.improved_prompt) + '</div></div></div></div>';
+  }).join('');
+
+  window._worksheetData = { tips: tips, avg: avg };
+  document.getElementById('insightPanel').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── WORKSHEET ──
+function downloadWorksheet() {
+  var d = window._worksheetData;
+  if (!d) return;
+  var sc = d.avg >= 75 ? '#16a34a' : d.avg >= 50 ? '#d97706' : '#dc2626';
+
+  var tipsHtml = d.tips.map(function(t, i) {
+    return '<div style="margin-bottom:18px;padding:14px;background:#f8f9ff;border-left:3px solid #6366f1;border-radius:0 4px 4px 0;"><div style="font-size:10px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Focus area '+(i+1)+'</div><div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:5px;">'+t.title+'</div><div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:6px;">'+t.description+'</div><div style="font-size:12px;color:#6366f1;font-style:italic;">→ '+t.action+'</div></div>';
+  }).join('');
+
+  var logHtml = sessionResults.map(function(s, i) {
+    var lsc = s.result.total >= 75 ? '#16a34a' : s.result.total >= 50 ? '#d97706' : '#dc2626';
+    return '<div style="margin-bottom:24px;page-break-inside:avoid;"><div style="display:flex;align-items:baseline;gap:10px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-bottom:10px;"><span style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;">Challenge '+(i+1)+'</span><span style="font-size:13px;font-weight:600;color:#111827;">'+s.challenge.title+'</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:'+lsc+';">'+s.result.total+'/100</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div style="background:#f9fafb;padding:10px;border-radius:4px;"><div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;margin-bottom:5px;">Your prompt</div><div style="font-size:11px;color:#374151;line-height:1.65;font-family:monospace;white-space:pre-wrap;">'+s.userPrompt.replace(/</g,'&lt;')+'</div></div><div style="background:#f0f4ff;padding:10px;border-radius:4px;border-left:3px solid #6366f1;"><div style="font-size:10px;font-weight:600;color:#6366f1;text-transform:uppercase;margin-bottom:5px;">Expert rewrite</div><div style="font-size:11px;color:#1e1b4b;line-height:1.65;font-family:monospace;white-space:pre-wrap;">'+s.result.improved_prompt.replace(/</g,'&lt;')+'</div></div></div><div style="margin-top:6px;font-size:11px;color:#6b7280;line-height:1.6;"><strong>Key lesson:</strong> '+s.result.verdict+'</div></div>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Prompt Engineering Worksheet</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;margin:0;padding:0;}@media print{.no-print{display:none}}</style></head><body><div style="max-width:900px;margin:0 auto;padding:44px 40px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #111827;">' +
+    '<div><div style="font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#6b7280;margin-bottom:5px;">Prompt Engineer — Challenge Mode</div><div style="font-size:26px;font-weight:700;">Session Worksheet</div></div>' +
+    '<div style="text-align:right;"><div style="font-size:11px;color:#9ca3af;margin-bottom:3px;">Overall score</div><div style="font-size:38px;font-weight:700;color:'+sc+';">'+d.avg+'/100</div></div></div>' +
+    '<div style="margin-bottom:28px;padding:18px;background:#f8f9ff;border-radius:6px;border:1px solid #e0e7ff;">' +
+    '<div style="font-size:11px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">The 4 dimensions of a great prompt</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+    '<div><strong style="font-size:12px;">Clarity</strong><br><span style="font-size:11px;color:#6b7280;">Unambiguous instruction — Claude knows exactly what to do</span></div>' +
+    '<div><strong style="font-size:12px;">Specificity</strong><br><span style="font-size:11px;color:#6b7280;">Concrete details: format, length, tone, audience, constraints</span></div>' +
+    '<div><strong style="font-size:12px;">Context</strong><br><span style="font-size:11px;color:#6b7280;">Background Claude needs to produce a great answer</span></div>' +
+    '<div><strong style="font-size:12px;">Structure</strong><br><span style="font-size:11px;color:#6b7280;">Well-organised — guides Claude through what is needed</span></div>' +
+    '</div></div>' +
+    '<div style="margin-bottom:28px;"><div style="font-size:14px;font-weight:700;margin-bottom:14px;padding-bottom:7px;border-bottom:1px solid #e5e7eb;">Your 3 focus areas</div>' + tipsHtml + '</div>' +
+    '<div><div style="font-size:14px;font-weight:700;margin-bottom:14px;padding-bottom:7px;border-bottom:1px solid #e5e7eb;">Session log</div>' + logHtml + '</div>' +
+    '<div style="margin-top:32px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;text-align:center;">Prompt Engineer — julian-waite.github.io</div>' +
+    '</div><script>window.print();<\/script></body></html>';
+
+  var blob = new Blob([html], { type: 'text/html' });
+  var url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+}
+
+// ── RESTART ──
+function restartSession() {
+  currentIndex = 0;
+  scores = [];
+  sessionResults = [];
+  document.getElementById('completeScreen').style.display = 'none';
+  document.getElementById('insightPanel').style.display = 'none';
+  document.getElementById('challengeView').style.display = 'block';
+  loadChallenge();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+
+</body></html>
