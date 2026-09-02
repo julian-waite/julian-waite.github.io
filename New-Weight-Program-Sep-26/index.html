@@ -74,9 +74,20 @@
   label{ display:block; font-size:.78rem; color:var(--text-dim); margin:10px 0 4px; font-weight:600; }
   input[type=number], input[type=date], input[type=text], select, textarea{
     width:100%; padding:9px 10px; border-radius:6px; border:1px solid var(--border);
-    background:var(--bg); color:var(--text); font-size:.9rem;
+    background:var(--bg); color:var(--text); font-size:16px; line-height:1.3;
+    -webkit-appearance:none; appearance:none;
   }
-  textarea{ min-height:50px; resize:vertical; font-family:inherit; }
+  input[type=number], input[type=date], input[type=text], select{
+    min-height:44px;
+  }
+  select{
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23888888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    background-size:11px 7px;
+    padding-right:30px;
+  }
+  textarea{ min-height:50px; resize:vertical; font-family:inherit; -webkit-appearance:none; appearance:none; }
   .slot-block{ border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
   .slot-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
   .slot-pattern{ font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dim); font-weight:700; }
