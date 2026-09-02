@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A/B Program Tracker</title>
+<style>
+  :root{
+    --navy:#1F2A44;
+    --navy-light:#2E3C61;
+    --accent:#8A1F1F;
+    --bg:#F6F7F9;
+    --card:#FFFFFF;
+    --border:#E2E4EA;
+    --text:#1B1F27;
+    --text-dim:#5B6270;
+    --bad:#B8331F;
+  }
+  [data-theme="dark"]{
+    --bg:#14161C;
+    --card:#1C1F29;
+    --border:#2B2F3B;
+    --text:#EDEEF2;
+    --text-dim:#9AA0AE;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161C;
+      --card:#1C1F29;
+      --border:#2B2F3B;
+      --text:#EDEEF2;
+      --text-dim:#9AA0AE;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--navy); color:#fff; padding:22px 20px 18px;
+  }
+  header h1{margin:0 0 4px; font-size:1.4rem; letter-spacing:.2px;}
+  header p{margin:0; color:#C7CCDA; font-size:.85rem;}
+  .wrap{max-width:820px; margin:0 auto; padding:0 16px;}
+  nav{
+    display:flex; overflow-x:auto; gap:4px; background:var(--navy-light);
+    padding:0 12px;
+  }
+  nav button{
+    background:none; border:none; color:#C7CCDA; padding:12px 14px; font-size:.85rem;
+    cursor:pointer; white-space:nowrap; border-bottom:3px solid transparent; font-weight:600;
+  }
+  nav button.active{ color:#fff; border-bottom-color:var(--accent); }
+  main{ padding:18px 0 40px; }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:18px; margin-bottom:16px;
+  }
+  .card h2{ margin:0 0 12px; font-size:1.05rem; }
+  .next-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--navy); color:#fff; border-radius:10px; padding:16px 18px; margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .next-banner div.big{ font-size:1.3rem; font-weight:700; }
+  .next-banner div.sub{ font-size:.8rem; color:#C7CCDA; margin-top:2px;}
+  .btn{
+    background:var(--accent); color:#fff; border:none; border-radius:7px; padding:10px 16px;
+    font-size:.85rem; font-weight:600; cursor:pointer;
+  }
+  .btn.secondary{ background:transparent; color:var(--text); border:1px solid var(--border); }
+  label{ display:block; font-size:.78rem; color:var(--text-dim); margin:10px 0 4px; font-weight:600; }
+  input[type=number], input[type=date], input[type=text], select, textarea{
+    width:100%; padding:9px 10px; border-radius:6px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:.9rem;
+  }
+  textarea{ min-height:50px; resize:vertical; font-family:inherit; }
+  .slot-block{ border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .slot-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .slot-pattern{ font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dim); font-weight:700; }
+  .slot-toggle{ display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .toggle-btn{ background:var(--bg); border:none; color:var(--text-dim); padding:6px 10px; font-size:.72rem; font-weight:600; cursor:pointer; }
+  .toggle-btn.active{ background:var(--navy); color:#fff; }
+  .toggle-btn + .toggle-btn{ border-left:1px solid var(--border); }
+  .slot-exercise .ex-name{ font-weight:700; font-size:.92rem; }
+  .slot-exercise .ex-target{ font-size:.75rem; color:var(--text-dim); margin-bottom:8px;}
+  .single-option-tag{ font-size:.68rem; color:var(--text-dim); font-weight:600; }
+  .sets-row{ display:grid; grid-template-columns:auto 1fr 1fr; gap:8px; align-items:center; margin-bottom:6px;}
+  .sets-row span{ font-size:.78rem; color:var(--text-dim); }
+  table{ width:100%; border-collapse:collapse; font-size:.83rem; }
+  table th, table td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--border); }
+  table th{ color:var(--text-dim); font-size:.72rem; text-transform:uppercase; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .muted{ color:var(--text-dim); font-size:.82rem; }
+  .empty{ text-align:center; padding:30px 10px; color:var(--text-dim); font-size:.85rem;}
+  .chart-wrap{ position:relative; height:220px; margin-top:10px;}
+  .footer-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--navy); color:#fff; padding:10px 18px; border-radius:8px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:opacity .25s; z-index:50;
+  }
+  .toast.show{ opacity:1; }
+  select#dayTypeSelect{ max-width:260px; }
+  .history-item{ border-bottom:1px solid var(--border); padding:10px 0; }
+  .history-item:last-child{ border-bottom:none; }
+  .history-item .hi-top{ display:flex; justify-content:space-between; align-items:center; font-size:.85rem; font-weight:600;}
+  .history-item .hi-detail{ font-size:.78rem; color:var(--text-dim); margin-top:4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>A/B Full Body Program</h1>
+    <p>Simple session tracker — lifts, tennis, bodyweight</p>
+  </div>
+</header>
+
+<nav class="wrap" id="tabNav">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="log">Log Lift</button>
+  <button data-tab="tennis">Log Tennis</button>
+  <button data-tab="weighin">Weigh-in</button>
+  <button data-tab="history">History</button>
+  <button data-tab="program">Program</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<main class="wrap">
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard">
+    <div class="next-banner">
+      <div>
+        <div class="sub">Next lifting session</div>
+        <div class="big" id="nextSessionLabel">Day A</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sub" id="lastSessionSub">No sessions logged yet</div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card" style="text-align:center;">
+        <div class="muted">Lifts logged</div>
+        <div style="font-size:1.6rem;font-weight:700" id="statLifts">0</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="muted">Tennis sessions</div>
+        <div style="font-size:1.6rem;font-weight:700" id="statTennis">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bodyweight trend</h2>
+      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Body fat % trend</h2>
+      <div class="chart-wrap"><canvas id="bfChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Resting heart rate trend</h2>
+      <div class="chart-wrap"><canvas id="rhrChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>HRV trend</h2>
+      <div class="chart-wrap"><canvas id="hrvChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- LOG LIFT -->
+  <section id="tab-log" style="display:none">
+    <div class="card">
+      <h2>Log a lifting session</h2>
+      <div class="row2">
+        <div>
+          <label>Date</label>
+          <input type="date" id="logDate">
+        </div>
+        <div>
+          <label>Session</label>
+          <select id="dayTypeSelect">
+            <option value="A">Day A — squat / horizontal push / horizontal pull</option>
+            <option value="B">Day B — single-leg / vertical push / vertical pull</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="exerciseInputs"></div>
+
+      <label>Session notes</label>
+      <textarea id="logNotes" placeholder="How it felt, form notes, anything to adjust next time..."></textarea>
+
+      <div class="footer-actions">
+        <button class="btn" id="saveSessionBtn">Save session</button>
+        <span class="muted" id="saveSessionMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOG TENNIS -->
+  <section id="tab-tennis" style="display:none">
+    <div class="card">
+      <h2>Log a singles session</h2>
+      <div class="row2">
+        <div><label>Date</label><input type="date" id="tennisDate"></div>
+        <div>
+          <label>Duration (min)</label>
+          <input type="number" id="tennisDuration" placeholder="60">
+        </div>
+      </div>
+      <label>Intensity</label>
+      <select id="tennisIntensity">
+        <option value="moderate">Moderate</option>
+        <option value="high">High</option>
+      </select>
+      <label>Notes</label>
+      <textarea id="tennisNotes" placeholder="Opponent, result, legs/recovery notes..."></textarea>
+      <div class="footer-actions">
+        <button class="btn" id="saveTennisBtn">Save tennis session</button>
+        <span class="muted" id="saveTennisMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEIGH-IN -->
+  <section id="tab-weighin" style="display:none">
+    <div class="card">
+      <h2>Log a weigh-in</h2>
+      <div class="row2">
+        <div><label>Date</label><input type="date" id="wiDate"></div>
+        <div><label>Weight (kg)</label><input type="number" step="0.1" id="wiWeight" placeholder="99.7"></div>
+      </div>
+      <div class="row3">
+        <div><label>Body fat % (optional)</label><input type="number" step="0.1" id="wiBF" placeholder="23.2"></div>
+        <div><label>RHR (bpm, optional)</label><input type="number" id="wiRHR" placeholder="57"></div>
+        <div><label>HRV (ms, optional)</label><input type="number" id="wiHRV" placeholder="25"></div>
+      </div>
+      <label>Notes</label>
+      <textarea id="wiNotes" placeholder="Anything relevant..."></textarea>
+      <div class="footer-actions">
+        <button class="btn" id="saveWeighinBtn">Save weigh-in</button>
+        <span class="muted" id="saveWeighinMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="tab-history" style="display:none">
+    <div class="card">
+      <h2>Lift progression</h2>
+      <label>Exercise</label>
+      <select id="progressExerciseSelect"></select>
+      <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>All sessions</h2>
+      <div id="historyList"><div class="empty">Nothing logged yet.</div></div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="muted">Data lives only in this browser (localStorage) — it won't sync across devices. Export regularly, especially before clearing browser data.</p>
+      <div class="footer-actions">
+        <button class="btn secondary" id="exportBtn">Export JSON</button>
+        <label class="btn secondary" style="cursor:pointer;">Import JSON<input type="file" id="importFile" accept="application/json" style="display:none"></label>
+        <button class="btn secondary" id="clearBtn" style="border-color:var(--bad); color:var(--bad);">Clear all data</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRAM REFERENCE -->
+  <section id="tab-program" style="display:none">
+    <div class="card">
+      <h2>Day A — ~35–40 min</h2>
+      <table>
+        <thead><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr></thead>
+        <tbody id="programA"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Day B — ~35–40 min</h2>
+      <table>
+        <thead><tr><th>Exercise</th><th>Sets × reps</th><th>Rest</th></tr></thead>
+        <tbody id="programB"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" style="display:none">
+    <div class="card">
+      <h2>Appearance</h2>
+      <label>Theme</label>
+      <select id="themeSetting">
+        <option value="system">Match system</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "abTrackerData_v1";
+
+  var PROGRAM = {
+    A: {
+      label: "Day A",
+      slots: [
+        { pattern: "Lower body, squat pattern", options: [
+          {name:"Back Squat", target:"3 × 5", rest:"2–3 min", sets:3},
+          {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Horizontal push", options: [
+          {name:"Barbell Bench Press", target:"3 × 8", rest:"90 sec", sets:3},
+          {name:"Chest Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Horizontal pull", options: [
+          {name:"Barbell Row", target:"3 × 10", rest:"90 sec", sets:3},
+          {name:"Seated Row Machine", target:"3 × 10", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Hamstrings / posterior chain", options: [
+          {name:"Leg Curl Machine", target:"3 × 10–12", rest:"60–75 sec", sets:3}
+        ]}
+      ]
+    },
+    B: {
+      label: "Day B",
+      slots: [
+        { pattern: "Lower body, single-leg / press pattern", options: [
+          {name:"Bulgarian Split Squat", target:"3 × 8 each leg", rest:"90 sec", sets:3},
+          {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Vertical push", options: [
+          {name:"Overhead Press", target:"3 × 8", rest:"2 min", sets:3},
+          {name:"Shoulder Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Vertical pull", options: [
+          {name:"Weighted Pull-up / Chin-up", target:"3 × 8–10", rest:"90 sec", sets:3},
+          {name:"Lat Pulldown Machine", target:"3 × 10", rest:"90 sec", sets:3}
+        ]},
+        { pattern: "Hip hinge / glutes", options: [
+          {name:"Barbell Hip Thrust", target:"3 × 10", rest:"90 sec", sets:3},
+          {name:"Hip Thrust Machine", target:"3 × 10", rest:"90 sec", sets:3}
+        ]}
+      ]
+    }
+  };
+
+  function defaultSettings(){ return {theme:"system"}; }
+
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {sessions:[], tennis:[], weighins:[], settings:defaultSettings()};
+      var d = JSON.parse(raw);
+      d.sessions = d.sessions || [];
+      d.tennis = d.tennis || [];
+      d.weighins = d.weighins || [];
+      d.settings = d.settings || defaultSettings();
+      return d;
+    }catch(e){
+      console.warn("localStorage read failed", e);
+      return {sessions:[], tennis:[], weighins:[], settings:defaultSettings()};
+    }
+  }
+  function saveData(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
+    catch(e){ console.warn("localStorage write failed", e); showToast("Couldn't save — storage unavailable in this browser."); }
+  }
+
+  var DATA = loadData();
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+  // ---------- Tiny dependency-free line chart (canvas) ----------
+  function getCssVar(name){
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return (v && v.trim()) || "#888888";
+  }
+  function drawLineChart(canvasId, labels, values, color){
+    var canvas = document.getElementById(canvasId);
+    if(!canvas) return;
+    var parent = canvas.parentElement;
+    var dpr = window.devicePixelRatio || 1;
+    var w = Math.max(parent.clientWidth, 100), h = Math.max(parent.clientHeight, 100);
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    canvas.style.width = w + "px"; canvas.style.height = h + "px";
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    if(!values || values.length === 0){
+      ctx.fillStyle = getCssVar("--text-dim");
+      ctx.font = "13px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("No data yet", w/2, h/2);
+      return;
+    }
+
+    var padL = 42, padR = 14, padT = 14, padB = 24;
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    if(min === max){ min -= 1; max += 1; }
+    var rangePad = (max - min) * 0.15;
+    min -= rangePad; max += rangePad;
+    var plotW = w - padL - padR, plotH = h - padT - padB;
+
+    function xAt(i){ return padL + (values.length === 1 ? plotW/2 : (i/(values.length-1)) * plotW); }
+    function yAt(v){ return padT + plotH - ((v - min) / (max - min)) * plotH; }
+
+    ctx.strokeStyle = getCssVar("--border"); ctx.lineWidth = 1;
+    ctx.fillStyle = getCssVar("--text-dim"); ctx.font = "11px sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for(var g = 0; g <= 2; g++){
+      var val = min + (max - min) * (g/2);
+      var yy = yAt(val);
+      ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(w - padR, yy); ctx.stroke();
+      ctx.fillText(val.toFixed(1), padL - 6, yy);
+    }
+
+    if(values.length > 1){
+      ctx.beginPath();
+      values.forEach(function(v, i){ var px = xAt(i), py = yAt(v); if(i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+      ctx.lineTo(xAt(values.length - 1), padT + plotH);
+      ctx.lineTo(xAt(0), padT + plotH);
+      ctx.closePath();
+      ctx.fillStyle = color + "2A";
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath();
+    values.forEach(function(v, i){ var px = xAt(i), py = yAt(v); if(i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    values.forEach(function(v, i){ ctx.beginPath(); ctx.arc(xAt(i), yAt(v), 3, 0, Math.PI * 2); ctx.fill(); });
+
+    ctx.fillStyle = getCssVar("--text-dim"); ctx.font = "11px sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(labels[0], xAt(0), h - padB + 6);
+    if(labels.length > 1) ctx.fillText(labels[labels.length - 1], xAt(labels.length - 1), h - padB + 6);
+  }
+  var chartRedraws = {};
+  function registerRedraw(key, fn){ chartRedraws[key] = fn; fn(); }
+  window.addEventListener("resize", debounce(function(){
+    Object.keys(chartRedraws).forEach(function(k){ chartRedraws[k](); });
+  }, 150));
+  function debounce(fn, ms){
+    var t;
+    return function(){ clearTimeout(t); t = setTimeout(fn, ms); };
+  }
+
+  // ---------- Tabs ----------
+  var tabs = document.querySelectorAll("#tabNav button");
+  tabs.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabs.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll("main > section").forEach(function(s){ s.style.display = "none"; });
+      document.getElementById("tab-" + btn.dataset.tab).style.display = "block";
+      if(btn.dataset.tab === "dashboard") renderDashboard();
+      if(btn.dataset.tab === "history") renderHistory();
+      if(btn.dataset.tab === "log") renderExerciseInputs();
+    });
+  });
+
+  // ---------- Theme ----------
+  function applyTheme(){
+    var theme = DATA.settings.theme || "system";
+    if(theme === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+  }
+
+  // ---------- Program reference table ----------
+  function fillProgramTable(id, dayKey){
+    var tbody = document.getElementById(id);
+    tbody.innerHTML = "";
+    PROGRAM[dayKey].slots.forEach(function(slot){
+      var labelRow = document.createElement("tr");
+      var td = document.createElement("td");
+      td.colSpan = 3;
+      td.style.fontStyle = "italic";
+      td.style.color = "var(--text-dim)";
+      td.style.fontSize = ".78rem";
+      td.textContent = slot.pattern + (slot.options.length > 1 ? " — pick one" : " — machine only");
+      labelRow.appendChild(td);
+      tbody.appendChild(labelRow);
+      slot.options.forEach(function(opt){
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>"+opt.name+"</td><td>"+opt.target+"</td><td>"+opt.rest+"</td>";
+        tbody.appendChild(tr);
+      });
+    });
+  }
+  fillProgramTable("programA","A");
+  fillProgramTable("programB","B");
+
+  // ---------- Next session logic ----------
+  function getNextDayType(){
+    if(DATA.sessions.length === 0) return "A";
+    var last = DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).pop();
+    return last.dayType === "A" ? "B" : "A";
+  }
+
+  // ---------- Dashboard ----------
+  function weighinSeries(field){
+    var pts = DATA.weighins
+      .filter(function(w){ return w[field] !== null && w[field] !== undefined; })
+      .slice()
+      .sort(function(a,b){ return a.date.localeCompare(b.date); });
+    return { labels: pts.map(function(w){ return w.date; }), values: pts.map(function(w){ return w[field]; }) };
+  }
+  function renderDashboard(){
+    var next = getNextDayType();
+    document.getElementById("nextSessionLabel").textContent = "Day " + next;
+
+    var lastSess = DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).pop();
+    document.getElementById("lastSessionSub").textContent = lastSess ? ("Last: Day " + lastSess.dayType + " on " + lastSess.date) : "No sessions logged yet";
+
+    document.getElementById("statLifts").textContent = DATA.sessions.length;
+    document.getElementById("statTennis").textContent = DATA.tennis.length;
+
+    var weightS = weighinSeries("weight");
+    registerRedraw("weight", function(){ drawLineChart("weightChart", weightS.labels, weightS.values, "#8A1F1F"); });
+
+    var bfS = weighinSeries("bf");
+    registerRedraw("bf", function(){ drawLineChart("bfChart", bfS.labels, bfS.values, "#1F2A44"); });
+
+    var rhrS = weighinSeries("rhr");
+    registerRedraw("rhr", function(){ drawLineChart("rhrChart", rhrS.labels, rhrS.values, "#B8860B"); });
+
+    var hrvS = weighinSeries("hrv");
+    registerRedraw("hrv", function(){ drawLineChart("hrvChart", hrvS.labels, hrvS.values, "#1F7A4D"); });
+  }
+
+  // ---------- Log lift ----------
+  document.getElementById("logDate").value = todayISO();
+  function renderExerciseInputs(){
+    document.getElementById("dayTypeSelect").value = getNextDayType();
+    buildExerciseInputs();
+  }
+  function buildExerciseInputs(){
+    var dayKey = document.getElementById("dayTypeSelect").value;
+    var container = document.getElementById("exerciseInputs");
+    container.innerHTML = "";
+    PROGRAM[dayKey].slots.forEach(function(slot){
+      var wrap = document.createElement("div");
+      wrap.className = "slot-block";
+
+      var header = document.createElement("div");
+      header.className = "slot-header";
+      var patternLabel = document.createElement("span");
+      patternLabel.className = "slot-pattern";
+      patternLabel.textContent = slot.pattern;
+      header.appendChild(patternLabel);
+
+      if(slot.options.length > 1){
+        var toggle = document.createElement("div");
+        toggle.className = "slot-toggle";
+        slot.options.forEach(function(opt, optIdx){
+          var b = document.createElement("button");
+          b.type = "button";
+          b.textContent = opt.name;
+          b.className = "toggle-btn" + (optIdx === 0 ? " active" : "");
+          b.addEventListener("click", function(){
+            toggle.querySelectorAll(".toggle-btn").forEach(function(tb){ tb.classList.remove("active"); });
+            b.classList.add("active");
+            renderSlotExercise(wrap, slot.options[optIdx]);
+          });
+          toggle.appendChild(b);
+        });
+        header.appendChild(toggle);
+      } else {
+        var tag = document.createElement("span");
+        tag.className = "single-option-tag";
+        tag.textContent = "Machine only";
+        header.appendChild(tag);
+      }
+      wrap.appendChild(header);
+
+      var area = document.createElement("div");
+      area.className = "slot-exercise";
+      wrap.appendChild(area);
+      container.appendChild(wrap);
+
+      renderSlotExercise(wrap, slot.options[0]);
+    });
+  }
+  function renderSlotExercise(wrap, opt){
+    var area = wrap.querySelector(".slot-exercise");
+    area.dataset.exName = opt.name;
+    var setsHtml = "";
+    for(var s=1; s<=opt.sets; s++){
+      setsHtml += '<div class="sets-row"><span>Set '+s+'</span>' +
+        '<input type="number" step="0.5" placeholder="kg" data-set="'+s+'" data-field="weight">' +
+        '<input type="number" placeholder="reps" data-set="'+s+'" data-field="reps"></div>';
+    }
+    area.innerHTML =
+      '<div class="ex-name">'+opt.name+'</div>' +
+      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+'</div>' +
+      setsHtml;
+  }
+  document.getElementById("dayTypeSelect").addEventListener("change", buildExerciseInputs);
+
+  document.getElementById("saveSessionBtn").addEventListener("click", function(){
+    var dayKey = document.getElementById("dayTypeSelect").value;
+    var slotBlocks = document.querySelectorAll("#exerciseInputs .slot-block");
+    var exercises = [];
+    slotBlocks.forEach(function(wrap){
+      var area = wrap.querySelector(".slot-exercise");
+      var sets = [];
+      area.querySelectorAll(".sets-row").forEach(function(row){
+        var weight = row.querySelector('[data-field="weight"]').value;
+        var reps = row.querySelector('[data-field="reps"]').value;
+        if(weight !== "" || reps !== ""){
+          sets.push({weight: weight ? parseFloat(weight) : null, reps: reps ? parseInt(reps,10) : null});
+        }
+      });
+      if(sets.length){
+        exercises.push({name: area.dataset.exName, sets: sets});
+      }
+    });
+    var session = {
+      id: "s_" + Date.now(),
+      date: document.getElementById("logDate").value || todayISO(),
+      dayType: dayKey,
+      notes: document.getElementById("logNotes").value,
+      exercises: exercises
+    };
+    DATA.sessions.push(session);
+    saveData();
+    document.getElementById("saveSessionMsg").textContent = "Saved.";
+    showToast("Session saved");
+    document.getElementById("logNotes").value = "";
+    setTimeout(function(){ document.getElementById("saveSessionMsg").textContent = ""; renderExerciseInputs(); }, 900);
+  });
+
+  // ---------- Log tennis ----------
+  document.getElementById("tennisDate").value = todayISO();
+  document.getElementById("saveTennisBtn").addEventListener("click", function(){
+    var entry = {
+      id: "t_" + Date.now(),
+      date: document.getElementById("tennisDate").value || todayISO(),
+      duration: document.getElementById("tennisDuration").value ? parseInt(document.getElementById("tennisDuration").value,10) : null,
+      intensity: document.getElementById("tennisIntensity").value,
+      notes: document.getElementById("tennisNotes").value
+    };
+    DATA.tennis.push(entry);
+    saveData();
+    document.getElementById("saveTennisMsg").textContent = "Saved.";
+    showToast("Tennis session saved");
+    document.getElementById("tennisDuration").value = "";
+    document.getElementById("tennisNotes").value = "";
+    setTimeout(function(){ document.getElementById("saveTennisMsg").textContent = ""; }, 900);
+  });
+
+  // ---------- Weigh-in ----------
+  document.getElementById("wiDate").value = todayISO();
+  document.getElementById("saveWeighinBtn").addEventListener("click", function(){
+    var weightVal = document.getElementById("wiWeight").value;
+    if(!weightVal){ showToast("Enter a weight to save a weigh-in"); return; }
+    var entry = {
+      id: "w_" + Date.now(),
+      date: document.getElementById("wiDate").value || todayISO(),
+      weight: parseFloat(weightVal),
+      bf: document.getElementById("wiBF").value ? parseFloat(document.getElementById("wiBF").value) : null,
+      rhr: document.getElementById("wiRHR").value ? parseInt(document.getElementById("wiRHR").value,10) : null,
+      hrv: document.getElementById("wiHRV").value ? parseInt(document.getElementById("wiHRV").value,10) : null,
+      notes: document.getElementById("wiNotes").value
+    };
+    DATA.weighins.push(entry);
+    saveData();
+    document.getElementById("saveWeighinMsg").textContent = "Saved.";
+    showToast("Weigh-in saved");
+    ["wiBF","wiRHR","wiHRV","wiNotes"].forEach(function(id){ document.getElementById(id).value = ""; });
+    setTimeout(function(){ document.getElementById("saveWeighinMsg").textContent = ""; }, 900);
+  });
+
+  // ---------- History ----------
+  function allExerciseNames(){
+    var names = {};
+    DATA.sessions.forEach(function(s){ s.exercises.forEach(function(e){ names[e.name] = true; }); });
+    return Object.keys(names);
+  }
+  function renderHistory(){
+    var list = document.getElementById("historyList");
+    var all = [];
+    DATA.sessions.forEach(function(s){ all.push({date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.length+" exercises logged" : "")}); });
+    DATA.tennis.forEach(function(t){ all.push({date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")}); });
+    DATA.weighins.forEach(function(w){ all.push({date:w.date, kind:"Weigh-in", detail:w.weight+"kg"+(w.bf?" · "+w.bf+"% BF":"")+(w.rhr?" · RHR "+w.rhr+"bpm":"")+(w.hrv?" · HRV "+w.hrv+"ms":"")}); });
+    all.sort(function(a,b){ return b.date.localeCompare(a.date); });
+    if(all.length === 0){
+      list.innerHTML = '<div class="empty">Nothing logged yet.</div>';
+    } else {
+      list.innerHTML = all.map(function(item){
+        return '<div class="history-item"><div class="hi-top"><span>'+item.date+' — '+item.kind+'</span></div><div class="hi-detail">'+item.detail+'</div></div>';
+      }).join("");
+    }
+
+    var select = document.getElementById("progressExerciseSelect");
+    var names = allExerciseNames();
+    var prevVal = select.value;
+    select.innerHTML = "";
+    if(names.length === 0){
+      select.innerHTML = "<option>No exercises logged yet</option>";
+    } else {
+      names.forEach(function(n){
+        var opt = document.createElement("option");
+        opt.value = n; opt.textContent = n;
+        select.appendChild(opt);
+      });
+      if(names.indexOf(prevVal) >= 0) select.value = prevVal;
+    }
+    renderProgressChart();
+  }
+  document.getElementById("progressExerciseSelect").addEventListener("change", renderProgressChart);
+  function renderProgressChart(){
+    var name = document.getElementById("progressExerciseSelect").value;
+    var points = [];
+    DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).forEach(function(s){
+      var ex = s.exercises.find(function(e){ return e.name === name; });
+      if(ex && ex.sets.length){
+        var top = ex.sets.reduce(function(max,set){ return (set.weight||0) > max ? (set.weight||0) : max; }, 0);
+        if(top > 0) points.push({date:s.date, weight:top});
+      }
+    });
+    registerRedraw("progress", function(){
+      drawLineChart("progressChart", points.map(function(p){ return p.date; }), points.map(function(p){ return p.weight; }), "#1F2A44");
+    });
+  }
+
+  // ---------- Export / Import / Clear ----------
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(DATA, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "ab-tracker-backup-" + todayISO() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var imported = JSON.parse(evt.target.result);
+        DATA = {
+          sessions: imported.sessions || [],
+          tennis: imported.tennis || [],
+          weighins: imported.weighins || [],
+          settings: imported.settings || defaultSettings()
+        };
+        saveData();
+        showToast("Data imported");
+        renderDashboard(); renderHistory(); applySettingsToInputs(); applyTheme();
+      }catch(err){
+        showToast("Import failed — invalid file");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    if(confirm("Clear all locally stored tracker data? This can't be undone unless you've exported a backup.")){
+      DATA = {sessions:[], tennis:[], weighins:[], settings:defaultSettings()};
+      saveData();
+      renderDashboard(); renderHistory(); applySettingsToInputs();
+      showToast("All data cleared");
+    }
+  });
+
+  // ---------- Settings ----------
+  function applySettingsToInputs(){
+    document.getElementById("themeSetting").value = DATA.settings.theme || "system";
+  }
+  document.getElementById("themeSetting").addEventListener("change", function(){
+    DATA.settings.theme = this.value;
+    saveData();
+    applyTheme();
+  });
+
+  // ---------- Init ----------
+  applyTheme();
+  applySettingsToInputs();
+  renderExerciseInputs();
+  renderDashboard();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
