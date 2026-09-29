@@ -354,7 +354,7 @@
       slots: [
         { pattern: "Lower body, single-leg / press pattern", options: [
           {name:"Bulgarian Split Squat", target:"3 × 8 each leg", rest:"90 sec", sets:3},
-          {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
+          {name:"Hack Squat Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
         { pattern: "Vertical push", options: [
           {name:"Overhead Press", target:"3 × 8", rest:"2 min", sets:3},
@@ -619,18 +619,31 @@
       renderSlotExercise(wrap, slot.options[0]);
     });
   }
+  function lastSessionForExercise(name){
+    var matches = DATA.sessions.filter(function(s){
+      return s.exercises.some(function(e){ return e.name === name; });
+    }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+    if(!matches.length) return null;
+    var s = matches[0];
+    var ex = s.exercises.find(function(e){ return e.name === name; });
+    return { date: s.date, sets: ex.sets };
+  }
   function renderSlotExercise(wrap, opt){
     var area = wrap.querySelector(".slot-exercise");
     area.dataset.exName = opt.name;
+    var last = lastSessionForExercise(opt.name);
     var setsHtml = "";
     for(var s=1; s<=opt.sets; s++){
+      var prevSet = last ? last.sets[s-1] : null;
+      var wPh = (prevSet && prevSet.weight !== null && prevSet.weight !== undefined) ? ("last " + prevSet.weight + "kg") : "kg";
+      var rPh = (prevSet && prevSet.reps !== null && prevSet.reps !== undefined) ? ("last " + prevSet.reps) : "reps";
       setsHtml += '<div class="sets-row"><span>Set '+s+'</span>' +
-        '<input type="number" step="0.5" placeholder="kg" data-set="'+s+'" data-field="weight">' +
-        '<input type="number" placeholder="reps" data-set="'+s+'" data-field="reps"></div>';
+        '<input type="number" step="0.5" placeholder="'+wPh+'" data-set="'+s+'" data-field="weight">' +
+        '<input type="number" placeholder="'+rPh+'" data-set="'+s+'" data-field="reps"></div>';
     }
     area.innerHTML =
       '<div class="ex-name">'+opt.name+'</div>' +
-      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+'</div>' +
+      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+(last ? ' · last done '+last.date : '')+'</div>' +
       setsHtml;
   }
   document.getElementById("dayTypeSelect").addEventListener("change", buildExerciseInputs);
