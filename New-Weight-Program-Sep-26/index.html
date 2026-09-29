@@ -120,6 +120,7 @@
   .history-item:last-child{ border-bottom:none; }
   .history-item .hi-top{ display:flex; justify-content:space-between; align-items:center; font-size:.85rem; font-weight:600;}
   .history-item .hi-detail{ font-size:.78rem; color:var(--text-dim); margin-top:4px; }
+  #coachingSummaryOutput{ min-height:240px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.76rem; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -275,6 +276,22 @@
     <div class="card">
       <h2>All sessions</h2>
       <div id="historyList"><div class="empty">Nothing logged yet.</div></div>
+    </div>
+    <div class="card">
+      <h2>Coaching summary</h2>
+      <p class="muted">A text summary of recent sessions, weigh-ins and tennis, formatted to paste into a coaching conversation.</p>
+      <label>Period</label>
+      <select id="summaryPeriod">
+        <option value="7">Last 7 days</option>
+        <option value="14" selected>Last 14 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+      <label>Summary</label>
+      <textarea id="coachingSummaryOutput" readonly></textarea>
+      <div class="footer-actions">
+        <button class="btn secondary" id="copySummaryBtn">Copy to clipboard</button>
+        <span class="muted" id="copySummaryMsg"></span>
+      </div>
     </div>
     <div class="card">
       <h2>Backup</h2>
@@ -758,6 +775,7 @@
       if(names.indexOf(prevVal) >= 0) select.value = prevVal;
     }
     renderProgressChart();
+    renderCoachingSummary();
   }
   document.getElementById("progressExerciseSelect").addEventListener("change", renderProgressChart);
   function renderProgressChart(){
@@ -774,6 +792,108 @@
       drawLineChart("progressChart", points.map(function(p){ return p.date; }), points.map(function(p){ return p.weight; }), "#1F2A44");
     });
   }
+
+  // ---------- Coaching summary ----------
+  function fmtNum(n){
+    if(n === null || n === undefined || isNaN(n)) return "–";
+    return (Math.round(n * 10) / 10).toString();
+  }
+  function signed(n){
+    var v = fmtNum(n);
+    return (n >= 0 ? "+" : "") + v;
+  }
+  function buildCoachingSummary(days){
+    var cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    var cutoffISO = cutoff.toISOString().slice(0,10);
+
+    var sessions = DATA.sessions.filter(function(s){ return s.date >= cutoffISO; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var tennis = DATA.tennis.filter(function(t){ return t.date >= cutoffISO; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var weighins = DATA.weighins.filter(function(w){ return w.date >= cutoffISO; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+    var lines = [];
+    lines.push("AB Tracker coaching summary — generated " + todayISO());
+    lines.push("Period: last " + days + " days (from " + cutoffISO + ")");
+    lines.push("");
+
+    lines.push("LIFTING SESSIONS (" + sessions.length + " logged)");
+    if(sessions.length === 0){
+      lines.push("  None logged in this period.");
+    } else {
+      sessions.forEach(function(s){
+        lines.push(s.date + " — Day " + s.dayType);
+        if(s.exercises.length === 0){
+          lines.push("  No exercises recorded.");
+        }
+        s.exercises.forEach(function(e){
+          var setStrs = e.sets.map(function(set){
+            var w = (set.weight !== null && set.weight !== undefined) ? set.weight + "kg" : "–";
+            var r = (set.reps !== null && set.reps !== undefined) ? set.reps : "–";
+            return w + "×" + r;
+          });
+          var volume = e.sets.reduce(function(sum, set){ return sum + ((set.weight || 0) * (set.reps || 0)); }, 0);
+          lines.push("  " + e.name + ": " + setStrs.join(", ") + " (volume " + fmtNum(volume) + "kg)");
+        });
+        if(s.notes){ lines.push("  Notes: " + s.notes); }
+      });
+    }
+    lines.push("");
+
+    lines.push("TENNIS (" + tennis.length + " logged)");
+    if(tennis.length === 0){
+      lines.push("  None logged in this period.");
+    } else {
+      tennis.forEach(function(t){
+        lines.push(t.date + " — " + t.intensity + (t.duration ? ", " + t.duration + " min" : "") + (t.notes ? " — " + t.notes : ""));
+      });
+    }
+    lines.push("");
+
+    lines.push("WEIGH-INS (" + weighins.length + " logged)");
+    if(weighins.length === 0){
+      lines.push("  None logged in this period.");
+    } else {
+      weighins.forEach(function(w){
+        var parts = [w.weight + "kg"];
+        if(w.bf !== null && w.bf !== undefined) parts.push("BF " + w.bf + "%");
+        if(w.rhr !== null && w.rhr !== undefined) parts.push("RHR " + w.rhr);
+        if(w.hrv !== null && w.hrv !== undefined) parts.push("HRV " + w.hrv);
+        lines.push(w.date + ": " + parts.join(", ") + (w.notes ? " — " + w.notes : ""));
+      });
+      if(weighins.length >= 2){
+        var first = weighins[0], last = weighins[weighins.length - 1];
+        var deltaParts = ["weight " + signed(last.weight - first.weight) + "kg"];
+        if(first.bf !== null && first.bf !== undefined && last.bf !== null && last.bf !== undefined) deltaParts.push("BF " + signed(last.bf - first.bf) + "pp");
+        if(first.rhr !== null && first.rhr !== undefined && last.rhr !== null && last.rhr !== undefined) deltaParts.push("RHR " + signed(last.rhr - first.rhr));
+        if(first.hrv !== null && first.hrv !== undefined && last.hrv !== null && last.hrv !== undefined) deltaParts.push("HRV " + signed(last.hrv - first.hrv));
+        lines.push("Change over period: " + deltaParts.join(", "));
+      }
+    }
+    lines.push("");
+    lines.push("Please review this against my current plan and flag anything worth adjusting.");
+
+    return lines.join("\n");
+  }
+  function renderCoachingSummary(){
+    var days = parseInt(document.getElementById("summaryPeriod").value, 10);
+    document.getElementById("coachingSummaryOutput").value = buildCoachingSummary(days);
+  }
+  document.getElementById("summaryPeriod").addEventListener("change", renderCoachingSummary);
+  document.getElementById("copySummaryBtn").addEventListener("click", function(){
+    var ta = document.getElementById("coachingSummaryOutput");
+    ta.focus();
+    ta.select();
+    var copied = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value);
+        copied = true;
+      } else {
+        copied = document.execCommand("copy");
+      }
+    }catch(e){ copied = false; }
+    showToast(copied ? "Copied — paste it into your coaching chat" : "Couldn't auto-copy — text is selected, copy manually");
+  });
 
   // ---------- Export / Import / Clear ----------
   document.getElementById("exportBtn").addEventListener("click", function(){
