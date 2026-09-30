@@ -15,6 +15,7 @@
     --text:#1B1F27;
     --text-dim:#5B6270;
     --bad:#B8331F;
+    --good:#1F7A4D;
   }
   [data-theme="dark"]{
     --bg:#14161C;
@@ -59,6 +60,7 @@
     padding:18px; margin-bottom:16px;
   }
   .card h2{ margin:0 0 12px; font-size:1.05rem; }
+  .card h3{ margin:16px 0 4px; font-size:.85rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; }
   .next-banner{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     background:var(--navy); color:#fff; border-radius:10px; padding:16px 18px; margin-bottom:16px;
@@ -91,6 +93,7 @@
   .slot-block{ border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
   .slot-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
   .slot-pattern{ font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dim); font-weight:700; }
+  .slot-note{ font-size:.72rem; color:var(--text-dim); margin:-4px 0 8px; font-style:italic; }
   .slot-toggle{ display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
   .toggle-btn{ background:var(--bg); border:none; color:var(--text-dim); padding:6px 10px; font-size:.72rem; font-weight:600; cursor:pointer; }
   .toggle-btn.active{ background:var(--navy); color:#fff; }
@@ -105,7 +108,15 @@
   table th{ color:var(--text-dim); font-size:.72rem; text-transform:uppercase; }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:480px){
+    .row3{ grid-template-columns:1fr 1fr; }
+    .row3.stats{ grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  }
+  .row3.stats .card{ padding:12px 6px; }
   .muted{ color:var(--text-dim); font-size:.82rem; }
+  .stat-num{ font-size:1.6rem; font-weight:700; }
+  .stat-num.good{ color:var(--good); }
+  .stat-num.bad{ color:var(--bad); }
   .empty{ text-align:center; padding:30px 10px; color:var(--text-dim); font-size:.85rem;}
   .chart-wrap{ position:relative; height:220px; margin-top:10px;}
   .footer-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
@@ -118,8 +129,9 @@
   select#dayTypeSelect{ max-width:260px; }
   .history-item{ border-bottom:1px solid var(--border); padding:10px 0; }
   .history-item:last-child{ border-bottom:none; }
-  .history-item .hi-top{ display:flex; justify-content:space-between; align-items:center; font-size:.85rem; font-weight:600;}
+  .history-item .hi-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:.85rem; font-weight:600;}
   .history-item .hi-detail{ font-size:.78rem; color:var(--text-dim); margin-top:4px; }
+  .del-btn{ background:none; border:1px solid var(--border); color:var(--bad); border-radius:6px; padding:4px 10px; font-size:.72rem; font-weight:600; cursor:pointer; flex-shrink:0; }
   #coachingSummaryOutput{ min-height:240px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.76rem; line-height:1.4; }
 </style>
 </head>
@@ -128,7 +140,7 @@
 <header>
   <div class="wrap">
     <h1>A/B Full Body Program</h1>
-    <p>Simple session tracker — lifts, tennis, bodyweight</p>
+    <p>Session tracker — lifts, tennis, weekly check-in</p>
   </div>
 </header>
 
@@ -136,7 +148,7 @@
   <button data-tab="dashboard" class="active">Dashboard</button>
   <button data-tab="log">Log Lift</button>
   <button data-tab="tennis">Log Tennis</button>
-  <button data-tab="weighin">Weigh-in</button>
+  <button data-tab="weighin">Weekly Check-in</button>
   <button data-tab="history">History</button>
   <button data-tab="program">Program</button>
   <button data-tab="settings">Settings</button>
@@ -156,24 +168,44 @@
       </div>
     </div>
 
-    <div class="row2">
+    <div class="row3 stats">
+      <div class="card" style="text-align:center;">
+        <div class="muted">Lifts, last 7 days</div>
+        <div class="stat-num" id="statLiftsWeek">0</div>
+        <div class="muted" style="font-size:.7rem">target 3</div>
+      </div>
       <div class="card" style="text-align:center;">
         <div class="muted">Lifts logged</div>
-        <div style="font-size:1.6rem;font-weight:700" id="statLifts">0</div>
+        <div class="stat-num" id="statLifts">0</div>
       </div>
       <div class="card" style="text-align:center;">
         <div class="muted">Tennis sessions</div>
-        <div style="font-size:1.6rem;font-weight:700" id="statTennis">0</div>
+        <div class="stat-num" id="statTennis">0</div>
       </div>
     </div>
 
     <div class="card">
-      <h2>Bodyweight trend</h2>
+      <h2>Bodyweight trend (weekly avg)</h2>
       <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
     </div>
 
     <div class="card">
-      <h2>Body fat % trend</h2>
+      <h2>Subcutaneous fat trend (kg)</h2>
+      <div class="chart-wrap"><canvas id="subfatChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Weekly alcohol units</h2>
+      <div class="chart-wrap"><canvas id="alcoholChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Average daily calories</h2>
+      <div class="chart-wrap"><canvas id="kcalChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Body fat % trend <span class="muted" style="font-weight:400">(noisy — secondary)</span></h2>
       <div class="chart-wrap"><canvas id="bfChart"></canvas></div>
     </div>
 
@@ -184,6 +216,7 @@
 
     <div class="card">
       <h2>HRV trend</h2>
+      <div class="muted" id="hrvBaselineNote"></div>
       <div class="chart-wrap"><canvas id="hrvChart"></canvas></div>
     </div>
   </section>
@@ -221,7 +254,7 @@
   <!-- LOG TENNIS -->
   <section id="tab-tennis" style="display:none">
     <div class="card">
-      <h2>Log a singles session</h2>
+      <h2>Log a tennis session</h2>
       <div class="row2">
         <div><label>Date</label><input type="date" id="tennisDate"></div>
         <div>
@@ -235,7 +268,7 @@
         <option value="high">High</option>
       </select>
       <label>Notes</label>
-      <textarea id="tennisNotes" placeholder="Opponent, result, legs/recovery notes..."></textarea>
+      <textarea id="tennisNotes" placeholder="Doubles / coaching, result, legs/recovery notes..."></textarea>
       <div class="footer-actions">
         <button class="btn" id="saveTennisBtn">Save tennis session</button>
         <span class="muted" id="saveTennisMsg"></span>
@@ -243,23 +276,41 @@
     </div>
   </section>
 
-  <!-- WEIGH-IN -->
+  <!-- WEEKLY CHECK-IN -->
   <section id="tab-weighin" style="display:none">
     <div class="card">
-      <h2>Log a weigh-in</h2>
+      <h2>Weekly check-in</h2>
+      <p class="muted" style="margin:0">Enter 7-day averages from Hume and Oura, plus MyFitnessPal intake and alcohol for the same week.</p>
+
+      <h3>Body</h3>
       <div class="row2">
         <div><label>Date</label><input type="date" id="wiDate"></div>
-        <div><label>Weight (kg)</label><input type="number" step="0.1" id="wiWeight" placeholder="99.7"></div>
+        <div><label>Weight, 7-day avg (kg)</label><input type="number" step="0.1" id="wiWeight" placeholder="100.7"></div>
       </div>
+      <div class="row2">
+        <div><label>Subcutaneous fat (kg)</label><input type="number" step="0.1" id="wiSubFat" placeholder="18.5"></div>
+        <div><label>Body fat %</label><input type="number" step="0.1" id="wiBF" placeholder="23.5"></div>
+      </div>
+
+      <h3>Recovery</h3>
+      <div class="row2">
+        <div><label>RHR (bpm)</label><input type="number" id="wiRHR" placeholder="53"></div>
+        <div><label>HRV (ms)</label><input type="number" id="wiHRV" placeholder="30"></div>
+      </div>
+
+      <h3>Intake</h3>
+      <label>Avg daily calories, 7 days (MFP)</label>
+      <input type="number" id="wiKcal" placeholder="2300">
       <div class="row3">
-        <div><label>Body fat % (optional)</label><input type="number" step="0.1" id="wiBF" placeholder="23.2"></div>
-        <div><label>RHR (bpm, optional)</label><input type="number" id="wiRHR" placeholder="57"></div>
-        <div><label>HRV (ms, optional)</label><input type="number" id="wiHRV" placeholder="25"></div>
+        <div><label>Alcohol units Fri</label><input type="number" step="0.5" id="wiAlcFri" placeholder="5"></div>
+        <div><label>Alcohol units Sat</label><input type="number" step="0.5" id="wiAlcSat" placeholder="7"></div>
+        <div><label>Units other days</label><input type="number" step="0.5" id="wiAlcOther" placeholder="0"></div>
       </div>
+
       <label>Notes</label>
-      <textarea id="wiNotes" placeholder="Anything relevant..."></textarea>
+      <textarea id="wiNotes" placeholder="Adherence, sleep, anything unusual this week..."></textarea>
       <div class="footer-actions">
-        <button class="btn" id="saveWeighinBtn">Save weigh-in</button>
+        <button class="btn" id="saveWeighinBtn">Save check-in</button>
         <span class="muted" id="saveWeighinMsg"></span>
       </div>
     </div>
@@ -271,15 +322,20 @@
       <h2>Lift progression</h2>
       <label>Exercise</label>
       <select id="progressExerciseSelect"></select>
+      <label>Show</label>
+      <select id="progressMetric">
+        <option value="volume">Total volume (sets × reps × kg)</option>
+        <option value="top">Top-set weight</option>
+      </select>
       <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
     </div>
     <div class="card">
-      <h2>All sessions</h2>
+      <h2>All entries</h2>
       <div id="historyList"><div class="empty">Nothing logged yet.</div></div>
     </div>
     <div class="card">
       <h2>Coaching summary</h2>
-      <p class="muted">A text summary of recent sessions, weigh-ins and tennis, formatted to paste into a coaching conversation.</p>
+      <p class="muted">A text summary of recent sessions, check-ins and tennis, formatted to paste into a coaching conversation.</p>
       <label>Period</label>
       <select id="summaryPeriod">
         <option value="7">Last 7 days</option>
@@ -333,6 +389,12 @@
         <option value="dark">Dark</option>
       </select>
     </div>
+    <div class="card">
+      <h2>HRV baseline</h2>
+      <p class="muted" style="margin:0">Your current 30-day Oura HRV average. Used to show suppression bands on the dashboard and in the coaching summary.</p>
+      <label>Baseline (ms)</label>
+      <input type="number" id="hrvBaselineSetting" placeholder="30">
+    </div>
   </section>
 
 </main>
@@ -354,7 +416,7 @@
           {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
         { pattern: "Horizontal push", options: [
-          {name:"Barbell Bench Press", target:"3 × 8", rest:"90 sec", sets:3},
+          {name:"Barbell Bench Press", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Chest Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
         { pattern: "Horizontal pull", options: [
@@ -369,7 +431,7 @@
     B: {
       label: "Day B",
       slots: [
-        { pattern: "Lower body, single-leg / press pattern", options: [
+        { pattern: "Lower body, single-leg / press pattern", note: "Keep this slot single-leg or hack squat — not leg press (that's Day A).", options: [
           {name:"Bulgarian Split Squat", target:"3 × 8 each leg", rest:"90 sec", sets:3},
           {name:"Hack Squat Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
@@ -389,7 +451,16 @@
     }
   };
 
-  function defaultSettings(){ return {theme:"system"}; }
+  function defaultSettings(){ return {theme:"system", hrvBaseline:null}; }
+
+  function ensureIds(d){
+    ["sessions","tennis","weighins"].forEach(function(k, ki){
+      d[k].forEach(function(item, i){
+        if(!item.id) item.id = ["s_","t_","w_"][ki] + "legacy_" + i + "_" + Math.random().toString(36).slice(2,7);
+      });
+    });
+    return d;
+  }
 
   function loadData(){
     try{
@@ -400,7 +471,7 @@
       d.tennis = d.tennis || [];
       d.weighins = d.weighins || [];
       d.settings = d.settings || defaultSettings();
-      return d;
+      return ensureIds(d);
     }catch(e){
       console.warn("localStorage read failed", e);
       return {sessions:[], tennis:[], weighins:[], settings:defaultSettings()};
@@ -421,13 +492,31 @@
   }
 
   function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function isNum(v){ return v !== null && v !== undefined && !isNaN(v); }
+  function numOrNull(id, isInt){
+    var v = document.getElementById(id).value;
+    if(v === "") return null;
+    return isInt ? parseInt(v,10) : parseFloat(v);
+  }
+  function alcoholTotal(w){
+    if(!isNum(w.alcFri) && !isNum(w.alcSat) && !isNum(w.alcOther)) return null;
+    return (w.alcFri || 0) + (w.alcSat || 0) + (w.alcOther || 0);
+  }
+  function hrvBand(hrv){
+    var b = DATA.settings.hrvBaseline;
+    if(!isNum(b) || !isNum(hrv)) return null;
+    var pct = hrv / b;
+    if(pct >= 0.95) return "at/above baseline";
+    if(pct >= 0.8) return "moderately suppressed";
+    return "significantly suppressed";
+  }
 
   // ---------- Tiny dependency-free line chart (canvas) ----------
   function getCssVar(name){
     var v = getComputedStyle(document.documentElement).getPropertyValue(name);
     return (v && v.trim()) || "#888888";
   }
-  function drawLineChart(canvasId, labels, values, color){
+  function drawLineChart(canvasId, labels, values, color, refLine){
     var canvas = document.getElementById(canvasId);
     if(!canvas) return;
     var parent = canvas.parentElement;
@@ -448,7 +537,9 @@
     }
 
     var padL = 42, padR = 14, padT = 14, padB = 24;
-    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    var all = values.slice();
+    if(isNum(refLine)) all.push(refLine);
+    var min = Math.min.apply(null, all), max = Math.max.apply(null, all);
     if(min === max){ min -= 1; max += 1; }
     var rangePad = (max - min) * 0.15;
     min -= rangePad; max += rangePad;
@@ -465,6 +556,14 @@
       var yy = yAt(val);
       ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(w - padR, yy); ctx.stroke();
       ctx.fillText(val.toFixed(1), padL - 6, yy);
+    }
+
+    if(isNum(refLine)){
+      ctx.save();
+      ctx.setLineDash([5,4]);
+      ctx.strokeStyle = getCssVar("--text-dim");
+      ctx.beginPath(); ctx.moveTo(padL, yAt(refLine)); ctx.lineTo(w - padR, yAt(refLine)); ctx.stroke();
+      ctx.restore();
     }
 
     if(values.length > 1){
@@ -551,14 +650,20 @@
     var last = DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).pop();
     return last.dayType === "A" ? "B" : "A";
   }
+  function isoDaysAgo(days){
+    var d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0,10);
+  }
 
   // ---------- Dashboard ----------
   function weighinSeries(field){
+    var getter = typeof field === "function" ? field : function(w){ return w[field]; };
     var pts = DATA.weighins
-      .filter(function(w){ return w[field] !== null && w[field] !== undefined; })
+      .filter(function(w){ return isNum(getter(w)); })
       .slice()
       .sort(function(a,b){ return a.date.localeCompare(b.date); });
-    return { labels: pts.map(function(w){ return w.date; }), values: pts.map(function(w){ return w[field]; }) };
+    return { labels: pts.map(function(w){ return w.date; }), values: pts.map(getter) };
   }
   function renderDashboard(){
     var next = getNextDayType();
@@ -567,11 +672,25 @@
     var lastSess = DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).pop();
     document.getElementById("lastSessionSub").textContent = lastSess ? ("Last: Day " + lastSess.dayType + " on " + lastSess.date) : "No sessions logged yet";
 
+    var weekCutoff = isoDaysAgo(6);
+    var liftsWeek = DATA.sessions.filter(function(s){ return s.date >= weekCutoff; }).length;
+    var lwEl = document.getElementById("statLiftsWeek");
+    lwEl.textContent = liftsWeek;
+    lwEl.className = "stat-num " + (liftsWeek >= 3 ? "good" : "");
     document.getElementById("statLifts").textContent = DATA.sessions.length;
     document.getElementById("statTennis").textContent = DATA.tennis.length;
 
     var weightS = weighinSeries("weight");
     registerRedraw("weight", function(){ drawLineChart("weightChart", weightS.labels, weightS.values, "#8A1F1F"); });
+
+    var subS = weighinSeries("subFat");
+    registerRedraw("subfat", function(){ drawLineChart("subfatChart", subS.labels, subS.values, "#6A3FA0"); });
+
+    var alcS = weighinSeries(alcoholTotal);
+    registerRedraw("alcohol", function(){ drawLineChart("alcoholChart", alcS.labels, alcS.values, "#C0661A"); });
+
+    var kcalS = weighinSeries("kcal");
+    registerRedraw("kcal", function(){ drawLineChart("kcalChart", kcalS.labels, kcalS.values, "#2A7AB8"); });
 
     var bfS = weighinSeries("bf");
     registerRedraw("bf", function(){ drawLineChart("bfChart", bfS.labels, bfS.values, "#1F2A44"); });
@@ -579,8 +698,12 @@
     var rhrS = weighinSeries("rhr");
     registerRedraw("rhr", function(){ drawLineChart("rhrChart", rhrS.labels, rhrS.values, "#B8860B"); });
 
+    var baseline = DATA.settings.hrvBaseline;
+    document.getElementById("hrvBaselineNote").textContent = isNum(baseline)
+      ? "Dashed line = baseline " + baseline + "ms. Moderately suppressed below " + Math.round(baseline*0.95) + "ms, significantly below " + Math.round(baseline*0.8) + "ms."
+      : "Set your HRV baseline in Settings to see suppression bands.";
     var hrvS = weighinSeries("hrv");
-    registerRedraw("hrv", function(){ drawLineChart("hrvChart", hrvS.labels, hrvS.values, "#1F7A4D"); });
+    registerRedraw("hrv", function(){ drawLineChart("hrvChart", hrvS.labels, hrvS.values, "#1F7A4D", baseline); });
   }
 
   // ---------- Log lift ----------
@@ -628,6 +751,13 @@
       }
       wrap.appendChild(header);
 
+      if(slot.note){
+        var note = document.createElement("div");
+        note.className = "slot-note";
+        note.textContent = slot.note;
+        wrap.appendChild(note);
+      }
+
       var area = document.createElement("div");
       area.className = "slot-exercise";
       wrap.appendChild(area);
@@ -645,6 +775,9 @@
     var ex = s.exercises.find(function(e){ return e.name === name; });
     return { date: s.date, sets: ex.sets };
   }
+  function exVolume(ex){
+    return ex.sets.reduce(function(sum, set){ return sum + ((set.weight || 0) * (set.reps || 0)); }, 0);
+  }
   function renderSlotExercise(wrap, opt){
     var area = wrap.querySelector(".slot-exercise");
     area.dataset.exName = opt.name;
@@ -652,15 +785,16 @@
     var setsHtml = "";
     for(var s=1; s<=opt.sets; s++){
       var prevSet = last ? last.sets[s-1] : null;
-      var wPh = (prevSet && prevSet.weight !== null && prevSet.weight !== undefined) ? ("last " + prevSet.weight + "kg") : "kg";
-      var rPh = (prevSet && prevSet.reps !== null && prevSet.reps !== undefined) ? ("last " + prevSet.reps) : "reps";
+      var wPh = (prevSet && isNum(prevSet.weight)) ? ("last " + prevSet.weight + "kg") : "kg";
+      var rPh = (prevSet && isNum(prevSet.reps)) ? ("last " + prevSet.reps) : "reps";
       setsHtml += '<div class="sets-row"><span>Set '+s+'</span>' +
-        '<input type="number" step="0.5" placeholder="'+wPh+'" data-set="'+s+'" data-field="weight">' +
-        '<input type="number" placeholder="'+rPh+'" data-set="'+s+'" data-field="reps"></div>';
+        '<input type="number" step="0.25" inputmode="decimal" placeholder="'+wPh+'" data-set="'+s+'" data-field="weight">' +
+        '<input type="number" inputmode="numeric" placeholder="'+rPh+'" data-set="'+s+'" data-field="reps"></div>';
     }
+    var lastVol = last ? exVolume({sets:last.sets}) : null;
     area.innerHTML =
       '<div class="ex-name">'+opt.name+'</div>' +
-      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+(last ? ' · last done '+last.date : '')+'</div>' +
+      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+(last ? ' · last done '+last.date+' · volume to beat '+Math.round(lastVol)+'kg' : '')+'</div>' +
       setsHtml;
   }
   document.getElementById("dayTypeSelect").addEventListener("change", buildExerciseInputs);
@@ -669,6 +803,7 @@
     var dayKey = document.getElementById("dayTypeSelect").value;
     var slotBlocks = document.querySelectorAll("#exerciseInputs .slot-block");
     var exercises = [];
+    var incomplete = false;
     slotBlocks.forEach(function(wrap){
       var area = wrap.querySelector(".slot-exercise");
       var sets = [];
@@ -676,6 +811,7 @@
         var weight = row.querySelector('[data-field="weight"]').value;
         var reps = row.querySelector('[data-field="reps"]').value;
         if(weight !== "" || reps !== ""){
+          if(weight === "" || reps === "") incomplete = true;
           sets.push({weight: weight ? parseFloat(weight) : null, reps: reps ? parseInt(reps,10) : null});
         }
       });
@@ -683,6 +819,7 @@
         exercises.push({name: area.dataset.exName, sets: sets});
       }
     });
+    if(incomplete && !confirm("Some sets have a weight but no reps (or vice versa). Save anyway?")) return;
     var session = {
       id: "s_" + Date.now(),
       date: document.getElementById("logDate").value || todayISO(),
@@ -704,7 +841,7 @@
     var entry = {
       id: "t_" + Date.now(),
       date: document.getElementById("tennisDate").value || todayISO(),
-      duration: document.getElementById("tennisDuration").value ? parseInt(document.getElementById("tennisDuration").value,10) : null,
+      duration: numOrNull("tennisDuration", true),
       intensity: document.getElementById("tennisIntensity").value,
       notes: document.getElementById("tennisNotes").value
     };
@@ -717,25 +854,30 @@
     setTimeout(function(){ document.getElementById("saveTennisMsg").textContent = ""; }, 900);
   });
 
-  // ---------- Weigh-in ----------
+  // ---------- Weekly check-in ----------
   document.getElementById("wiDate").value = todayISO();
   document.getElementById("saveWeighinBtn").addEventListener("click", function(){
-    var weightVal = document.getElementById("wiWeight").value;
-    if(!weightVal){ showToast("Enter a weight to save a weigh-in"); return; }
+    var weightVal = numOrNull("wiWeight");
+    if(!isNum(weightVal)){ showToast("Enter a weight to save a check-in"); return; }
     var entry = {
       id: "w_" + Date.now(),
       date: document.getElementById("wiDate").value || todayISO(),
-      weight: parseFloat(weightVal),
-      bf: document.getElementById("wiBF").value ? parseFloat(document.getElementById("wiBF").value) : null,
-      rhr: document.getElementById("wiRHR").value ? parseInt(document.getElementById("wiRHR").value,10) : null,
-      hrv: document.getElementById("wiHRV").value ? parseInt(document.getElementById("wiHRV").value,10) : null,
+      weight: weightVal,
+      subFat: numOrNull("wiSubFat"),
+      bf: numOrNull("wiBF"),
+      rhr: numOrNull("wiRHR", true),
+      hrv: numOrNull("wiHRV", true),
+      kcal: numOrNull("wiKcal", true),
+      alcFri: numOrNull("wiAlcFri"),
+      alcSat: numOrNull("wiAlcSat"),
+      alcOther: numOrNull("wiAlcOther"),
       notes: document.getElementById("wiNotes").value
     };
     DATA.weighins.push(entry);
     saveData();
     document.getElementById("saveWeighinMsg").textContent = "Saved.";
-    showToast("Weigh-in saved");
-    ["wiBF","wiRHR","wiHRV","wiNotes"].forEach(function(id){ document.getElementById(id).value = ""; });
+    showToast("Check-in saved");
+    ["wiWeight","wiSubFat","wiBF","wiRHR","wiHRV","wiKcal","wiAlcFri","wiAlcSat","wiAlcOther","wiNotes"].forEach(function(id){ document.getElementById(id).value = ""; });
     setTimeout(function(){ document.getElementById("saveWeighinMsg").textContent = ""; }, 900);
   });
 
@@ -745,19 +887,53 @@
     DATA.sessions.forEach(function(s){ s.exercises.forEach(function(e){ names[e.name] = true; }); });
     return Object.keys(names);
   }
+  function weighinDetail(w){
+    var parts = [w.weight + "kg"];
+    if(isNum(w.subFat)) parts.push("subcut " + w.subFat + "kg");
+    if(isNum(w.bf)) parts.push(w.bf + "% BF");
+    if(isNum(w.rhr)) parts.push("RHR " + w.rhr);
+    if(isNum(w.hrv)) parts.push("HRV " + w.hrv);
+    if(isNum(w.kcal)) parts.push(w.kcal + " kcal/day");
+    var alc = alcoholTotal(w);
+    if(isNum(alc)) parts.push(alc + " units");
+    return parts.join(" · ");
+  }
   function renderHistory(){
     var list = document.getElementById("historyList");
     var all = [];
-    DATA.sessions.forEach(function(s){ all.push({date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.length+" exercises logged" : "")}); });
-    DATA.tennis.forEach(function(t){ all.push({date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")}); });
-    DATA.weighins.forEach(function(w){ all.push({date:w.date, kind:"Weigh-in", detail:w.weight+"kg"+(w.bf?" · "+w.bf+"% BF":"")+(w.rhr?" · RHR "+w.rhr+"bpm":"")+(w.hrv?" · HRV "+w.hrv+"ms":"")}); });
+    DATA.sessions.forEach(function(s){ all.push({id:s.id, coll:"sessions", date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.map(function(e){ return e.name; }).join(", ") : " · no exercises")}); });
+    DATA.tennis.forEach(function(t){ all.push({id:t.id, coll:"tennis", date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")+(t.notes ? " · "+t.notes : "")}); });
+    DATA.weighins.forEach(function(w){ all.push({id:w.id, coll:"weighins", date:w.date, kind:"Check-in", detail:weighinDetail(w)}); });
     all.sort(function(a,b){ return b.date.localeCompare(a.date); });
     if(all.length === 0){
       list.innerHTML = '<div class="empty">Nothing logged yet.</div>';
     } else {
-      list.innerHTML = all.map(function(item){
-        return '<div class="history-item"><div class="hi-top"><span>'+item.date+' — '+item.kind+'</span></div><div class="hi-detail">'+item.detail+'</div></div>';
-      }).join("");
+      list.innerHTML = "";
+      all.forEach(function(item){
+        var div = document.createElement("div");
+        div.className = "history-item";
+        var top = document.createElement("div");
+        top.className = "hi-top";
+        var span = document.createElement("span");
+        span.textContent = item.date + " — " + item.kind;
+        var del = document.createElement("button");
+        del.className = "del-btn";
+        del.type = "button";
+        del.textContent = "Delete";
+        del.addEventListener("click", function(){
+          if(!confirm("Delete this " + item.kind.toLowerCase() + " entry from " + item.date + "?")) return;
+          DATA[item.coll] = DATA[item.coll].filter(function(x){ return x.id !== item.id; });
+          saveData();
+          showToast("Entry deleted");
+          renderHistory();
+        });
+        top.appendChild(span); top.appendChild(del);
+        var detail = document.createElement("div");
+        detail.className = "hi-detail";
+        detail.textContent = item.detail;
+        div.appendChild(top); div.appendChild(detail);
+        list.appendChild(div);
+      });
     }
 
     var select = document.getElementById("progressExerciseSelect");
@@ -778,34 +954,41 @@
     renderCoachingSummary();
   }
   document.getElementById("progressExerciseSelect").addEventListener("change", renderProgressChart);
+  document.getElementById("progressMetric").addEventListener("change", renderProgressChart);
   function renderProgressChart(){
     var name = document.getElementById("progressExerciseSelect").value;
+    var metric = document.getElementById("progressMetric").value;
     var points = [];
     DATA.sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).forEach(function(s){
       var ex = s.exercises.find(function(e){ return e.name === name; });
       if(ex && ex.sets.length){
-        var top = ex.sets.reduce(function(max,set){ return (set.weight||0) > max ? (set.weight||0) : max; }, 0);
-        if(top > 0) points.push({date:s.date, weight:top});
+        var v = metric === "volume"
+          ? exVolume(ex)
+          : ex.sets.reduce(function(max,set){ return (set.weight||0) > max ? (set.weight||0) : max; }, 0);
+        if(v > 0) points.push({date:s.date, v:v});
       }
     });
     registerRedraw("progress", function(){
-      drawLineChart("progressChart", points.map(function(p){ return p.date; }), points.map(function(p){ return p.weight; }), "#1F2A44");
+      drawLineChart("progressChart", points.map(function(p){ return p.date; }), points.map(function(p){ return p.v; }), "#1F2A44");
     });
   }
 
   // ---------- Coaching summary ----------
   function fmtNum(n){
-    if(n === null || n === undefined || isNaN(n)) return "–";
+    if(!isNum(n)) return "–";
     return (Math.round(n * 10) / 10).toString();
   }
   function signed(n){
     var v = fmtNum(n);
     return (n >= 0 ? "+" : "") + v;
   }
+  function avg(arr){
+    var nums = arr.filter(isNum);
+    if(!nums.length) return null;
+    return nums.reduce(function(a,b){ return a+b; }, 0) / nums.length;
+  }
   function buildCoachingSummary(days){
-    var cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    var cutoffISO = cutoff.toISOString().slice(0,10);
+    var cutoffISO = isoDaysAgo(days);
 
     var sessions = DATA.sessions.filter(function(s){ return s.date >= cutoffISO; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
     var tennis = DATA.tennis.filter(function(t){ return t.date >= cutoffISO; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
@@ -816,7 +999,7 @@
     lines.push("Period: last " + days + " days (from " + cutoffISO + ")");
     lines.push("");
 
-    lines.push("LIFTING SESSIONS (" + sessions.length + " logged)");
+    lines.push("LIFTING SESSIONS (" + sessions.length + " logged · " + fmtNum(sessions.length / days * 7) + "/week vs target 3)");
     if(sessions.length === 0){
       lines.push("  None logged in this period.");
     } else {
@@ -827,12 +1010,11 @@
         }
         s.exercises.forEach(function(e){
           var setStrs = e.sets.map(function(set){
-            var w = (set.weight !== null && set.weight !== undefined) ? set.weight + "kg" : "–";
-            var r = (set.reps !== null && set.reps !== undefined) ? set.reps : "–";
+            var w = isNum(set.weight) ? set.weight + "kg" : "–";
+            var r = isNum(set.reps) ? set.reps : "–";
             return w + "×" + r;
           });
-          var volume = e.sets.reduce(function(sum, set){ return sum + ((set.weight || 0) * (set.reps || 0)); }, 0);
-          lines.push("  " + e.name + ": " + setStrs.join(", ") + " (volume " + fmtNum(volume) + "kg)");
+          lines.push("  " + e.name + ": " + setStrs.join(", ") + " (volume " + fmtNum(exVolume(e)) + "kg)");
         });
         if(s.notes){ lines.push("  Notes: " + s.notes); }
       });
@@ -849,23 +1031,42 @@
     }
     lines.push("");
 
-    lines.push("WEIGH-INS (" + weighins.length + " logged)");
+    var baseline = DATA.settings.hrvBaseline;
+    lines.push("WEEKLY CHECK-INS (" + weighins.length + " logged · weight and recovery are 7-day averages)" + (isNum(baseline) ? " · HRV baseline " + baseline + "ms" : ""));
     if(weighins.length === 0){
       lines.push("  None logged in this period.");
     } else {
       weighins.forEach(function(w){
         var parts = [w.weight + "kg"];
-        if(w.bf !== null && w.bf !== undefined) parts.push("BF " + w.bf + "%");
-        if(w.rhr !== null && w.rhr !== undefined) parts.push("RHR " + w.rhr);
-        if(w.hrv !== null && w.hrv !== undefined) parts.push("HRV " + w.hrv);
+        if(isNum(w.subFat)) parts.push("subcut fat " + w.subFat + "kg");
+        if(isNum(w.bf)) parts.push("BF " + w.bf + "%");
+        if(isNum(w.rhr)) parts.push("RHR " + w.rhr);
+        if(isNum(w.hrv)){
+          var band = hrvBand(w.hrv);
+          parts.push("HRV " + w.hrv + (band ? " (" + band + ")" : ""));
+        }
+        if(isNum(w.kcal)) parts.push("avg " + w.kcal + " kcal/day");
+        var alc = alcoholTotal(w);
+        if(isNum(alc)){
+          var split = [];
+          if(isNum(w.alcFri)) split.push("Fri " + w.alcFri);
+          if(isNum(w.alcSat)) split.push("Sat " + w.alcSat);
+          if(isNum(w.alcOther) && w.alcOther > 0) split.push("other " + w.alcOther);
+          parts.push("alcohol " + alc + " units (" + split.join(", ") + ")");
+        }
         lines.push(w.date + ": " + parts.join(", ") + (w.notes ? " — " + w.notes : ""));
       });
+      var avgKcal = avg(weighins.map(function(w){ return w.kcal; }));
+      var avgAlc = avg(weighins.map(alcoholTotal));
+      if(isNum(avgKcal) || isNum(avgAlc)){
+        lines.push("Period averages: " + [isNum(avgKcal) ? Math.round(avgKcal) + " kcal/day" : null, isNum(avgAlc) ? fmtNum(avgAlc) + " units/week" : null].filter(Boolean).join(", "));
+      }
       if(weighins.length >= 2){
         var first = weighins[0], last = weighins[weighins.length - 1];
         var deltaParts = ["weight " + signed(last.weight - first.weight) + "kg"];
-        if(first.bf !== null && first.bf !== undefined && last.bf !== null && last.bf !== undefined) deltaParts.push("BF " + signed(last.bf - first.bf) + "pp");
-        if(first.rhr !== null && first.rhr !== undefined && last.rhr !== null && last.rhr !== undefined) deltaParts.push("RHR " + signed(last.rhr - first.rhr));
-        if(first.hrv !== null && first.hrv !== undefined && last.hrv !== null && last.hrv !== undefined) deltaParts.push("HRV " + signed(last.hrv - first.hrv));
+        [["subFat","subcut fat","kg"],["bf","BF","pp"],["rhr","RHR",""],["hrv","HRV",""]].forEach(function(f){
+          if(isNum(first[f[0]]) && isNum(last[f[0]])) deltaParts.push(f[1] + " " + signed(last[f[0]] - first[f[0]]) + f[2]);
+        });
         lines.push("Change over period: " + deltaParts.join(", "));
       }
     }
@@ -914,12 +1115,12 @@
     reader.onload = function(evt){
       try{
         var imported = JSON.parse(evt.target.result);
-        DATA = {
+        DATA = ensureIds({
           sessions: imported.sessions || [],
           tennis: imported.tennis || [],
           weighins: imported.weighins || [],
           settings: imported.settings || defaultSettings()
-        };
+        });
         saveData();
         showToast("Data imported");
         renderDashboard(); renderHistory(); applySettingsToInputs(); applyTheme();
@@ -942,11 +1143,17 @@
   // ---------- Settings ----------
   function applySettingsToInputs(){
     document.getElementById("themeSetting").value = DATA.settings.theme || "system";
+    document.getElementById("hrvBaselineSetting").value = isNum(DATA.settings.hrvBaseline) ? DATA.settings.hrvBaseline : "";
   }
   document.getElementById("themeSetting").addEventListener("change", function(){
     DATA.settings.theme = this.value;
     saveData();
     applyTheme();
+  });
+  document.getElementById("hrvBaselineSetting").addEventListener("change", function(){
+    DATA.settings.hrvBaseline = this.value === "" ? null : parseFloat(this.value);
+    saveData();
+    showToast("HRV baseline saved");
   });
 
   // ---------- Init ----------
