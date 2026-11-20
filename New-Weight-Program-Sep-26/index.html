@@ -431,6 +431,15 @@
       </table>
     </div>
     <div class="card">
+      <h2>A/B progression</h2>
+      <ol class="muted" style="padding-left:18px; margin:0">
+        <li>Keep the weight until you hit the top of the rep range on every set</li>
+        <li>Then add weight: +5 kg on squats, leg press and hip thrusts, +2.5 kg on everything else</li>
+        <li>Work back up from the bottom of the range at the new weight</li>
+        <li>Fixed targets (like 3 × 5) — add weight once every set hits the number</li>
+      </ol>
+    </div>
+    <div class="card">
       <h2>Tennis-day alternative — barbell complex</h2>
       <p class="muted" style="margin-top:0">Same bar, same weight, no rest between moves. 10 step-ups (5 each leg) after every move. Warm up 5 min plus one empty-bar round.</p>
       <table>
@@ -881,14 +890,50 @@
   function exVolume(ex){
     return ex.sets.reduce(function(sum, set){ return sum + ((set.weight || 0) * (set.reps || 0)); }, 0);
   }
+  // Double progression: work up to the top of the rep range on every set, then add weight.
+  function repRange(target){
+    var m = target.match(/×\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
+    if(!m) return null;
+    var lo = parseInt(m[1],10);
+    return { lo: lo, hi: m[2] ? parseInt(m[2],10) : lo };
+  }
+  function weightStep(name){
+    return /Squat|Leg Press|Hip Thrust/.test(name) && !/Bulgarian/.test(name) ? 5 : 2.5;
+  }
+  function liftProgression(opt, last){
+    if(!last || !last.sets.length) return null;
+    var range = repRange(opt.target);
+    if(!range) return null;
+    var done = last.sets.filter(function(st){ return isNum(st.reps); });
+    if(!done.length) return null;
+    var top = done.reduce(function(mx, st){ return (st.weight || 0) > mx ? (st.weight || 0) : mx; }, 0);
+    var atTop = done.filter(function(st){ return (st.weight || 0) === top; });
+    var reps = atTop.map(function(st){ return st.reps; });
+    var minReps = Math.min.apply(null, reps);
+    var rangeTxt = range.lo === range.hi ? range.hi : range.lo + "–" + range.hi;
+    if(top === 0){
+      if(atTop.length >= opt.sets && minReps >= range.hi) return { text: "Hit " + range.hi + " on every set — add weight next time.", weight: null };
+      return { text: "Bodyweight — add a rep where you can, up to " + range.hi + " on every set.", weight: null };
+    }
+    if(atTop.length >= opt.sets && minReps >= range.hi){
+      var next = top + weightStep(opt.name);
+      return { text: "Hit " + range.hi + " on every set at " + top + "kg — go up to " + next + "kg" + (range.lo === range.hi ? "." : " and work back up from " + range.lo + "."), weight: next };
+    }
+    if(minReps < range.lo){
+      return { text: "Below " + range.lo + " reps last time — stay at " + top + "kg and own the range (" + rangeTxt + ").", weight: top };
+    }
+    return { text: "Stay at " + top + "kg — add a rep where you can, aiming for " + range.hi + " on every set.", weight: top };
+  }
   function renderSlotExercise(wrap, opt){
     var area = wrap.querySelector(".slot-exercise");
     area.dataset.exName = opt.name;
     var last = lastSessionForExercise(opt.name);
+    var prog = liftProgression(opt, last);
     var setsHtml = "";
     for(var s=1; s<=opt.sets; s++){
       var prevSet = last ? last.sets[s-1] : null;
-      var wPh = (prevSet && isNum(prevSet.weight)) ? ("last " + prevSet.weight + "kg") : "kg";
+      var wPh = (prog && isNum(prog.weight)) ? ("try " + prog.weight + "kg")
+        : (prevSet && isNum(prevSet.weight)) ? ("last " + prevSet.weight + "kg") : "kg";
       var rPh = (prevSet && isNum(prevSet.reps)) ? ("last " + prevSet.reps) : "reps";
       setsHtml += '<div class="sets-row"><span>Set '+s+'</span>' +
         '<input type="number" step="0.25" inputmode="decimal" placeholder="'+wPh+'" data-set="'+s+'" data-field="weight">' +
@@ -898,6 +943,7 @@
     area.innerHTML =
       '<div class="ex-name">'+opt.name+'</div>' +
       '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+(last ? ' · last done '+last.date+' · volume to beat '+Math.round(lastVol)+'kg' : '')+'</div>' +
+      (prog ? '<div class="slot-note" style="margin:-2px 0 8px">Next: '+prog.text+'</div>' : '') +
       setsHtml;
   }
   document.getElementById("dayTypeSelect").addEventListener("change", buildExerciseInputs);
