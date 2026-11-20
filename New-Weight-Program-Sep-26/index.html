@@ -140,14 +140,14 @@
 <header>
   <div class="wrap">
     <h1>A/B Full Body Program</h1>
-    <p>Session tracker — lifts, tennis, weekly check-in</p>
+    <p>Session tracker — lifts, tennis or complex, weekly check-in</p>
   </div>
 </header>
 
 <nav class="wrap" id="tabNav">
   <button data-tab="dashboard" class="active">Dashboard</button>
   <button data-tab="log">Log Lift</button>
-  <button data-tab="tennis">Log Tennis</button>
+  <button data-tab="tennis">Tennis Day</button>
   <button data-tab="weighin">Weekly Check-in</button>
   <button data-tab="history">History</button>
   <button data-tab="program">Program</button>
@@ -179,8 +179,9 @@
         <div class="stat-num" id="statLifts">0</div>
       </div>
       <div class="card" style="text-align:center;">
-        <div class="muted">Tennis sessions</div>
+        <div class="muted">Tennis days</div>
         <div class="stat-num" id="statTennis">0</div>
+        <div class="muted" style="font-size:.7rem" id="statTennisSplit">0 tennis · 0 complex</div>
       </div>
     </div>
 
@@ -254,6 +255,17 @@
   <!-- LOG TENNIS -->
   <section id="tab-tennis" style="display:none">
     <div class="card">
+      <div class="slot-header">
+        <h2 style="margin:0">Tennis day</h2>
+        <div class="slot-toggle" id="tennisDayToggle">
+          <button type="button" class="toggle-btn active" data-mode="tennis">Tennis</button>
+          <button type="button" class="toggle-btn" data-mode="complex">Barbell complex</button>
+        </div>
+      </div>
+      <p class="slot-note" style="margin:6px 0 0">Pick one, like the barbell/machine choice on lift days. Use the complex when you can't play.</p>
+    </div>
+
+    <div class="card" id="tennisPanel">
       <h2>Log a tennis session</h2>
       <div class="row2">
         <div><label>Date</label><input type="date" id="tennisDate"></div>
@@ -272,6 +284,48 @@
       <div class="footer-actions">
         <button class="btn" id="saveTennisBtn">Save tennis session</button>
         <span class="muted" id="saveTennisMsg"></span>
+      </div>
+    </div>
+
+    <div class="card" id="complexPanel" style="display:none">
+      <h2>Log a barbell complex</h2>
+      <div class="slot-block">
+        <div class="slot-pattern" style="margin-bottom:6px">One round — 10 step-ups (5 each leg) after every move</div>
+        <table><tbody id="complexMovesLog"></tbody></table>
+      </div>
+      <div class="slot-note" id="complexHint">No complex logged yet. Start at 20 kg, 3 min rest, aim for 1 round.</div>
+      <div class="row2">
+        <div><label>Date</label><input type="date" id="complexDate"></div>
+        <div><label>Bar weight (kg)</label><input type="number" step="2.5" id="complexWeight" placeholder="20"></div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Rounds completed</label>
+          <select id="complexRounds">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div>
+          <label>Rest between rounds</label>
+          <select id="complexRest">
+            <option value="180">3 min</option>
+            <option value="150">2 min 30</option>
+            <option value="120">2 min</option>
+            <option value="90">90 sec</option>
+          </select>
+        </div>
+      </div>
+      <label>Total time (min)</label>
+      <input type="number" id="complexTime" placeholder="15">
+      <label>Notes</label>
+      <textarea id="complexNotes" placeholder="Weakest move, form, how the step-ups felt..."></textarea>
+      <div class="footer-actions">
+        <button class="btn" id="saveComplexBtn">Save complex</button>
+        <span class="muted" id="saveComplexMsg"></span>
       </div>
     </div>
   </section>
@@ -376,6 +430,20 @@
         <tbody id="programB"></tbody>
       </table>
     </div>
+    <div class="card">
+      <h2>Tennis-day alternative — barbell complex</h2>
+      <p class="muted" style="margin-top:0">Same bar, same weight, no rest between moves. 10 step-ups (5 each leg) after every move. Warm up 5 min plus one empty-bar round.</p>
+      <table>
+        <thead><tr><th>Move</th><th>Reps</th></tr></thead>
+        <tbody id="programComplex"></tbody>
+      </table>
+      <h3>Progression</h3>
+      <ol class="muted" style="padding-left:18px; margin:0">
+        <li>20 kg, 3 min rest — build from 1 to 3 rounds</li>
+        <li>At 3 rounds, cut rest to 2 min then 90 sec</li>
+        <li>At 3 rounds on 90 sec, add 2.5–5 kg and go back to 3 min</li>
+      </ol>
+    </div>
   </section>
 
   <!-- SETTINGS -->
@@ -450,6 +518,31 @@
       ]
     }
   };
+
+  // Tennis-day alternative. Stored in DATA.tennis with type:"complex" so backups stay compatible.
+  var COMPLEX = [
+    {name:"Bent-over Row", reps:8},
+    {name:"High Pull", reps:6},
+    {name:"Clean and Press", reps:6},
+    {name:"Front Squat", reps:8},
+    {name:"Shoulder Press", reps:6}
+  ];
+  function isComplex(t){ return t.type === "complex"; }
+  function restLabel(sec){
+    if(!isNum(sec)) return "–";
+    if(sec <= 90) return sec + " sec";
+    if(sec % 60 === 0) return (sec/60) + " min";
+    if(sec > 60) return Math.floor(sec/60) + " min " + (sec % 60);
+    return sec + " sec";
+  }
+  function complexDetail(t){
+    var parts = [];
+    if(isNum(t.weight)) parts.push(t.weight + "kg");
+    parts.push(t.rounds + (t.rounds === 1 ? " round" : " rounds"));
+    parts.push(restLabel(t.rest) + " rest");
+    if(isNum(t.duration)) parts.push(t.duration + " min");
+    return parts.join(" · ");
+  }
 
   function defaultSettings(){ return {theme:"system", hrvBaseline:null}; }
 
@@ -643,6 +736,14 @@
   }
   fillProgramTable("programA","A");
   fillProgramTable("programB","B");
+  ["programComplex","complexMovesLog"].forEach(function(id){
+    var tbody = document.getElementById(id);
+    COMPLEX.forEach(function(m, i){
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>"+(i+1)+". "+m.name+"</td><td>× "+m.reps+"</td>";
+      tbody.appendChild(tr);
+    });
+  });
 
   // ---------- Next session logic ----------
   function getNextDayType(){
@@ -679,6 +780,8 @@
     lwEl.className = "stat-num " + (liftsWeek >= 3 ? "good" : "");
     document.getElementById("statLifts").textContent = DATA.sessions.length;
     document.getElementById("statTennis").textContent = DATA.tennis.length;
+    var nComplex = DATA.tennis.filter(isComplex).length;
+    document.getElementById("statTennisSplit").textContent = (DATA.tennis.length - nComplex) + " tennis · " + nComplex + " complex";
 
     var weightS = weighinSeries("weight");
     registerRedraw("weight", function(){ drawLineChart("weightChart", weightS.labels, weightS.values, "#8A1F1F"); });
@@ -854,6 +957,72 @@
     setTimeout(function(){ document.getElementById("saveTennisMsg").textContent = ""; }, 900);
   });
 
+  // ---------- Tennis day: tennis or complex ----------
+  var tdButtons = document.querySelectorAll("#tennisDayToggle .toggle-btn");
+  tdButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tdButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      var complex = btn.dataset.mode === "complex";
+      document.getElementById("tennisPanel").style.display = complex ? "none" : "block";
+      document.getElementById("complexPanel").style.display = complex ? "block" : "none";
+      if(complex) renderComplexHint();
+    });
+  });
+
+  function lastComplex(){
+    return DATA.tennis.filter(isComplex).sort(function(a,b){ return a.date.localeCompare(b.date); }).pop();
+  }
+  // Progression: build to 3 rounds -> cut rest to 90 sec -> add 2.5–5 kg and reset rest to 3 min
+  function renderComplexHint(){
+    var last = lastComplex();
+    var hint = document.getElementById("complexHint");
+    if(!last){
+      hint.textContent = "No complex logged yet. Start at 20 kg, 3 min rest, aim for 1 round.";
+      document.getElementById("complexWeight").value = 20;
+      document.getElementById("complexRest").value = "180";
+      return;
+    }
+    var w = isNum(last.weight) ? last.weight : 20;
+    var next, nextW = w, nextRest = last.rest;
+    if(last.rounds < 3){
+      next = "same weight and rest, aim for " + (last.rounds + 1) + " rounds.";
+    } else if(last.rest > 90){
+      nextRest = last.rest >= 150 ? 120 : 90;
+      next = "3 rounds done — keep " + w + "kg and cut rest to " + restLabel(nextRest) + ".";
+    } else {
+      nextW = w + 2.5; nextRest = 180;
+      next = "3 rounds on 90 sec — add 2.5–5 kg and go back to 3 min rest.";
+    }
+    hint.textContent = "Last: " + last.date + " — " + complexDetail(last) + ". Next: " + next;
+    document.getElementById("complexWeight").value = nextW;
+    document.getElementById("complexRest").value = String(nextRest);
+  }
+
+  document.getElementById("complexDate").value = todayISO();
+  document.getElementById("saveComplexBtn").addEventListener("click", function(){
+    var weight = numOrNull("complexWeight");
+    if(!isNum(weight)){ showToast("Enter the bar weight to save"); return; }
+    var entry = {
+      id: "t_" + Date.now(),
+      type: "complex",
+      date: document.getElementById("complexDate").value || todayISO(),
+      weight: weight,
+      rounds: parseInt(document.getElementById("complexRounds").value, 10),
+      rest: parseInt(document.getElementById("complexRest").value, 10),
+      duration: numOrNull("complexTime", true),
+      notes: document.getElementById("complexNotes").value
+    };
+    DATA.tennis.push(entry);
+    saveData();
+    document.getElementById("saveComplexMsg").textContent = "Saved.";
+    showToast("Complex saved");
+    document.getElementById("complexTime").value = "";
+    document.getElementById("complexNotes").value = "";
+    renderComplexHint();
+    setTimeout(function(){ document.getElementById("saveComplexMsg").textContent = ""; }, 900);
+  });
+
   // ---------- Weekly check-in ----------
   document.getElementById("wiDate").value = todayISO();
   document.getElementById("saveWeighinBtn").addEventListener("click", function(){
@@ -902,7 +1071,10 @@
     var list = document.getElementById("historyList");
     var all = [];
     DATA.sessions.forEach(function(s){ all.push({id:s.id, coll:"sessions", date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.map(function(e){ return e.name; }).join(", ") : " · no exercises")}); });
-    DATA.tennis.forEach(function(t){ all.push({id:t.id, coll:"tennis", date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")+(t.notes ? " · "+t.notes : "")}); });
+    DATA.tennis.forEach(function(t){
+      if(isComplex(t)) all.push({id:t.id, coll:"tennis", date:t.date, kind:"Complex", detail:complexDetail(t)+(t.notes ? " · "+t.notes : "")});
+      else all.push({id:t.id, coll:"tennis", date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")+(t.notes ? " · "+t.notes : "")});
+    });
     DATA.weighins.forEach(function(w){ all.push({id:w.id, coll:"weighins", date:w.date, kind:"Check-in", detail:weighinDetail(w)}); });
     all.sort(function(a,b){ return b.date.localeCompare(a.date); });
     if(all.length === 0){
@@ -1021,12 +1193,14 @@
     }
     lines.push("");
 
-    lines.push("TENNIS (" + tennis.length + " logged)");
+    var nCx = tennis.filter(isComplex).length;
+    lines.push("TENNIS DAYS (" + tennis.length + " logged · " + (tennis.length - nCx) + " tennis, " + nCx + " barbell complex)");
     if(tennis.length === 0){
       lines.push("  None logged in this period.");
     } else {
       tennis.forEach(function(t){
-        lines.push(t.date + " — " + t.intensity + (t.duration ? ", " + t.duration + " min" : "") + (t.notes ? " — " + t.notes : ""));
+        if(isComplex(t)) lines.push(t.date + " — Complex: " + complexDetail(t) + (t.notes ? " — " + t.notes : ""));
+        else lines.push(t.date + " — Tennis: " + t.intensity + (t.duration ? ", " + t.duration + " min" : "") + (t.notes ? " — " + t.notes : ""));
       });
     }
     lines.push("");
