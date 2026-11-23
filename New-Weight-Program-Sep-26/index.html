@@ -243,6 +243,7 @@
         </div>
       </div>
 
+      <div class="slot-note" style="margin:4px 0 10px">Before you start: grab a light pair of dumbbells (lateral raises) and a medium pair (curls, triceps) and keep them next to you. Everything in "rest periods" uses them — no walking between machines.</div>
       <div id="exerciseInputs"></div>
 
       <label>Session notes</label>
@@ -437,7 +438,7 @@
       <h2>A/B progression</h2>
       <ol class="muted" style="padding-left:18px; margin:0">
         <li>Keep the weight until you hit the top of the rep range on every set</li>
-        <li>Then add weight: +5 kg on squats, leg press and hip thrusts, +1 kg on lateral raises and curls, +2.5 kg on everything else</li>
+        <li>Then add weight: +5 kg on squats, leg press and hip thrusts, +1 kg on lateral raises and curls, +2 kg on triceps extensions, +2.5 kg on everything else</li>
         <li>Work back up from the bottom of the range at the new weight</li>
         <li>Fixed targets (like 3 × 5) — add weight once every set hits the number</li>
       </ol>
@@ -499,7 +500,7 @@
           {name:"Barbell Bench Press", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Chest Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Horizontal pull", pair: {name:"Triceps Pushdown (cable)", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Horizontal pull", pair: {name:"Overhead Dumbbell Triceps Extension", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Barbell Row", target:"3 × 10", rest:"90 sec", sets:3},
           {name:"Seated Row Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -519,7 +520,7 @@
           {name:"Overhead Press", target:"3 × 8", rest:"2 min", sets:3},
           {name:"Shoulder Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Vertical pull", pair: {name:"Triceps Pushdown (cable)", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Vertical pull", pair: {name:"Overhead Dumbbell Triceps Extension", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Weighted Pull-up / Chin-up", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Lat Pulldown Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -922,6 +923,7 @@
   }
   function weightStep(name){
     if(/Lateral Raise|Curl\b|Dumbbell Curl/.test(name) && !/Leg Curl/.test(name)) return 1;
+    if(/Triceps Extension/.test(name)) return 2;
     return /Squat|Leg Press|Hip Thrust/.test(name) && !/Bulgarian/.test(name) ? 5 : 2.5;
   }
   function liftProgression(opt, last){
