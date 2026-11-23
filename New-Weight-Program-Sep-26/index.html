@@ -100,6 +100,9 @@
   .toggle-btn + .toggle-btn{ border-left:1px solid var(--border); }
   .slot-exercise .ex-name{ font-weight:700; font-size:.92rem; }
   .slot-exercise .ex-target{ font-size:.75rem; color:var(--text-dim); margin-bottom:8px;}
+  .pair-block{ margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); }
+  .pair-label{ font-size:.72rem; font-weight:700; color:var(--navy); margin-bottom:6px; }
+  [data-theme="dark"] .pair-label{ color:var(--text-dim); }
   .single-option-tag{ font-size:.68rem; color:var(--text-dim); font-weight:600; }
   .sets-row{ display:grid; grid-template-columns:auto 1fr 1fr; gap:8px; align-items:center; margin-bottom:6px;}
   .sets-row span{ font-size:.78rem; color:var(--text-dim); }
@@ -434,7 +437,7 @@
       <h2>A/B progression</h2>
       <ol class="muted" style="padding-left:18px; margin:0">
         <li>Keep the weight until you hit the top of the rep range on every set</li>
-        <li>Then add weight: +5 kg on squats, leg press and hip thrusts, +2.5 kg on everything else</li>
+        <li>Then add weight: +5 kg on squats, leg press and hip thrusts, +1 kg on lateral raises and curls, +2.5 kg on everything else</li>
         <li>Work back up from the bottom of the range at the new weight</li>
         <li>Fixed targets (like 3 × 5) — add weight once every set hits the number</li>
       </ol>
@@ -488,15 +491,15 @@
     A: {
       label: "Day A",
       slots: [
-        { pattern: "Lower body, squat pattern", options: [
+        { pattern: "Lower body, squat pattern", pair: {name:"Dumbbell Lateral Raise", target:"3 × 12–15", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Back Squat", target:"3 × 5", rest:"2–3 min", sets:3},
           {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Horizontal push", options: [
+        { pattern: "Horizontal push", pair: {name:"Dumbbell Curl", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Barbell Bench Press", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Chest Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Horizontal pull", options: [
+        { pattern: "Horizontal pull", pair: {name:"Triceps Pushdown (cable)", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Barbell Row", target:"3 × 10", rest:"90 sec", sets:3},
           {name:"Seated Row Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -508,15 +511,15 @@
     B: {
       label: "Day B",
       slots: [
-        { pattern: "Lower body, single-leg / press pattern", note: "Keep this slot single-leg or hack squat — not leg press (that's Day A).", options: [
+        { pattern: "Lower body, single-leg / press pattern", pair: {name:"Dumbbell Lateral Raise", target:"3 × 12–15", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, note: "Keep this slot single-leg or hack squat — not leg press (that's Day A).", options: [
           {name:"Bulgarian Split Squat", target:"3 × 8 each leg", rest:"90 sec", sets:3},
           {name:"Hack Squat Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Vertical push", options: [
+        { pattern: "Vertical push", pair: {name:"Dumbbell Curl", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Overhead Press", target:"3 × 8", rest:"2 min", sets:3},
           {name:"Shoulder Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Vertical pull", options: [
+        { pattern: "Vertical pull", pair: {name:"Triceps Pushdown (cable)", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
           {name:"Weighted Pull-up / Chin-up", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Lat Pulldown Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -742,6 +745,11 @@
         tr.innerHTML = "<td>"+opt.name+"</td><td>"+opt.target+"</td><td>"+opt.rest+"</td>";
         tbody.appendChild(tr);
       });
+      if(slot.pair){
+        var pr = document.createElement("tr");
+        pr.innerHTML = "<td>+ "+slot.pair.name+"</td><td>"+slot.pair.target+"</td><td>in that rest</td>";
+        tbody.appendChild(pr);
+      }
     });
   }
   fillProgramTable("programA","A");
@@ -874,6 +882,20 @@
       var area = document.createElement("div");
       area.className = "slot-exercise";
       wrap.appendChild(area);
+
+      if(slot.pair){
+        var pairBlock = document.createElement("div");
+        pairBlock.className = "pair-block";
+        var pairLabel = document.createElement("div");
+        pairLabel.className = "pair-label";
+        pairLabel.textContent = "+ In your rest periods";
+        var pairArea = document.createElement("div");
+        pairArea.className = "slot-exercise";
+        pairBlock.appendChild(pairLabel);
+        pairBlock.appendChild(pairArea);
+        wrap.appendChild(pairBlock);
+        renderExerciseArea(pairArea, slot.pair);
+      }
       container.appendChild(wrap);
 
       renderSlotExercise(wrap, slot.options[0]);
@@ -899,6 +921,7 @@
     return { lo: lo, hi: m[2] ? parseInt(m[2],10) : lo };
   }
   function weightStep(name){
+    if(/Lateral Raise|Curl\b|Dumbbell Curl/.test(name) && !/Leg Curl/.test(name)) return 1;
     return /Squat|Leg Press|Hip Thrust/.test(name) && !/Bulgarian/.test(name) ? 5 : 2.5;
   }
   function liftProgression(opt, last){
@@ -926,7 +949,9 @@
     return { text: "Stay at " + top + "kg — add a rep where you can, aiming for " + range.hi + " on every set.", weight: top };
   }
   function renderSlotExercise(wrap, opt){
-    var area = wrap.querySelector(".slot-exercise");
+    renderExerciseArea(wrap.querySelector(".slot-exercise"), opt);
+  }
+  function renderExerciseArea(area, opt){
     area.dataset.exName = opt.name;
     var last = lastSessionForExercise(opt.name);
     var prog = liftProgression(opt, last);
@@ -943,7 +968,7 @@
     var lastVol = last ? exVolume({sets:last.sets}) : null;
     area.innerHTML =
       '<div class="ex-name">'+opt.name+'</div>' +
-      '<div class="ex-target">Target: '+opt.target+' · rest '+opt.rest+(last ? ' · last done '+last.date+' · volume to beat '+Math.round(lastVol)+'kg' : '')+'</div>' +
+      '<div class="ex-target">Target: '+opt.target+' · '+(opt.pairNote || ('rest '+opt.rest))+(last ? ' · last done '+last.date+' · volume to beat '+Math.round(lastVol)+'kg' : '')+'</div>' +
       (prog ? '<div class="slot-note" style="margin:-2px 0 8px">Next: '+prog.text+'</div>' : '') +
       setsHtml;
   }
@@ -954,8 +979,9 @@
     var slotBlocks = document.querySelectorAll("#exerciseInputs .slot-block");
     var exercises = [];
     var incomplete = false;
-    slotBlocks.forEach(function(wrap){
-      var area = wrap.querySelector(".slot-exercise");
+    var areas = [];
+    slotBlocks.forEach(function(wrap){ wrap.querySelectorAll(".slot-exercise").forEach(function(a){ areas.push(a); }); });
+    areas.forEach(function(area){
       var sets = [];
       area.querySelectorAll(".sets-row").forEach(function(row){
         var weight = row.querySelector('[data-field="weight"]').value;
