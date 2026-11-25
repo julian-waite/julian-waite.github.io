@@ -189,6 +189,11 @@
     </div>
 
     <div class="card">
+      <h2>Shoulder pain (0–10)</h2>
+      <div class="chart-wrap"><canvas id="painChart"></canvas></div>
+    </div>
+
+    <div class="card">
       <h2>Bodyweight trend (weekly avg)</h2>
       <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
     </div>
@@ -243,8 +248,10 @@
         </div>
       </div>
 
-      <div class="slot-note" style="margin:4px 0 10px">Before you start: grab a light pair of dumbbells (lateral raises) and a medium pair (curls, triceps) and keep them next to you. Everything in "rest periods" uses them — no walking between machines.</div>
       <div id="exerciseInputs"></div>
+
+      <label>Shoulder pain (0–10)</label>
+      <input type="number" min="0" max="10" step="1" inputmode="numeric" id="logPain" placeholder="0 = none, 10 = worst">
 
       <label>Session notes</label>
       <textarea id="logNotes" placeholder="How it felt, form notes, anything to adjust next time..."></textarea>
@@ -297,6 +304,11 @@
         <div class="slot-pattern" style="margin-bottom:6px">One round — 10 step-ups (5 each leg) after every move</div>
         <table><tbody id="complexMovesLog"></tbody></table>
       </div>
+      <div class="slot-block">
+        <div class="slot-pattern" style="margin-bottom:6px">Then, at the end of each round (before the rest)</div>
+        <table><tbody id="complexDbLog"></tbody></table>
+        <div class="slot-note" style="margin:6px 0 0">Shoulder sore? Swap the overhead triceps extension for a lying dumbbell triceps extension.</div>
+      </div>
       <div class="slot-note" id="complexHint">No complex logged yet. Start at 20 kg, 3 min rest, aim for 1 round.</div>
       <div class="row2">
         <div><label>Date</label><input type="date" id="complexDate"></div>
@@ -323,8 +335,12 @@
           </select>
         </div>
       </div>
+      <label>Per round</label>
+      <div id="complexRoundInputs"></div>
       <label>Total time (min)</label>
       <input type="number" id="complexTime" placeholder="15">
+      <label>Shoulder pain (0–10)</label>
+      <input type="number" min="0" max="10" step="1" inputmode="numeric" id="complexPain" placeholder="0 = none, 10 = worst">
       <label>Notes</label>
       <textarea id="complexNotes" placeholder="Weakest move, form, how the step-ups felt..."></textarea>
       <div class="footer-actions">
@@ -450,6 +466,9 @@
         <thead><tr><th>Move</th><th>Reps</th></tr></thead>
         <tbody id="programComplex"></tbody>
       </table>
+      <h3>End of each round, before the rest</h3>
+      <table><tbody id="programComplexDb"></tbody></table>
+      <p class="muted" style="margin:6px 0 0">Shoulder sore? Swap to a lying dumbbell triceps extension.</p>
       <h3>Progression</h3>
       <ol class="muted" style="padding-left:18px; margin:0">
         <li>20 kg, 3 min rest — build from 1 to 3 rounds</li>
@@ -492,15 +511,15 @@
     A: {
       label: "Day A",
       slots: [
-        { pattern: "Lower body, squat pattern", pair: {name:"Dumbbell Lateral Raise", target:"3 × 12–15", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Lower body, squat pattern", options: [
           {name:"Back Squat", target:"3 × 5", rest:"2–3 min", sets:3},
           {name:"Leg Press Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Horizontal push", pair: {name:"Dumbbell Curl", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Horizontal push", options: [
           {name:"Barbell Bench Press", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Chest Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Horizontal pull", pair: {name:"Overhead Dumbbell Triceps Extension", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Horizontal pull", options: [
           {name:"Barbell Row", target:"3 × 10", rest:"90 sec", sets:3},
           {name:"Seated Row Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -512,15 +531,15 @@
     B: {
       label: "Day B",
       slots: [
-        { pattern: "Lower body, single-leg / press pattern", pair: {name:"Dumbbell Lateral Raise", target:"3 × 12–15", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, note: "Keep this slot single-leg or hack squat — not leg press (that's Day A).", options: [
+        { pattern: "Lower body, single-leg / press pattern", note: "Keep this slot single-leg or hack squat — not leg press (that's Day A).", options: [
           {name:"Bulgarian Split Squat", target:"3 × 8 each leg", rest:"90 sec", sets:3},
           {name:"Hack Squat Machine", target:"3 × 10–12", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Vertical push", pair: {name:"Dumbbell Curl", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Vertical push", options: [
           {name:"Overhead Press", target:"3 × 8", rest:"2 min", sets:3},
           {name:"Shoulder Press Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
-        { pattern: "Vertical pull", pair: {name:"Overhead Dumbbell Triceps Extension", target:"3 × 10–12", rest:"–", pairNote:"do a set between each set of the lift above", sets:3}, options: [
+        { pattern: "Vertical pull", options: [
           {name:"Weighted Pull-up / Chin-up", target:"3 × 8–10", rest:"90 sec", sets:3},
           {name:"Lat Pulldown Machine", target:"3 × 10", rest:"90 sec", sets:3}
         ]},
@@ -539,8 +558,26 @@
     {name:"Clean and Press", reps:6},
     {name:"Front Squat", reps:8},
     {name:"Shoulder Press", reps:6},
-    {name:"Push-ups (bar down)", reps:10}
+    {name:"Push-ups (bar down)", reps:"6–8", pushup:true}
   ];
+  var COMPLEX_DB = [
+    {key:"lat", name:"Dumbbell Lateral Raise", weight:5, reps:12},
+    {key:"curl", name:"Dumbbell Curl", weight:10, reps:10},
+    {key:"tri", name:"Overhead Dumbbell Triceps Extension", weight:10, reps:10}
+  ];
+  function painVal(id){
+    var v = numOrNull(id, true);
+    if(!isNum(v)) return null;
+    return Math.max(0, Math.min(10, v));
+  }
+  // Push-ups: 6–8 per round; once 8+ is hit in all 3 rounds, target becomes 8–10.
+  function pushupTarget(){
+    var up = DATA.tennis.some(function(t){
+      return isComplex(t) && t.pushups && t.pushups.length >= 3 &&
+        t.pushups.slice(0,3).every(function(r){ return isNum(r) && r >= 8; });
+    });
+    return up ? "8–10" : "6–8";
+  }
   function isComplex(t){ return t.type === "complex"; }
   function restLabel(sec){
     if(!isNum(sec)) return "–";
@@ -555,6 +592,8 @@
     parts.push(t.rounds + (t.rounds === 1 ? " round" : " rounds"));
     parts.push(restLabel(t.rest) + " rest");
     if(isNum(t.duration)) parts.push(t.duration + " min");
+    if(t.pushups && t.pushups.length) parts.push("push-ups " + t.pushups.map(function(r){ return isNum(r) ? r : "–"; }).join("/"));
+    if(isNum(t.shoulderPain)) parts.push("shoulder " + t.shoulderPain + "/10");
     return parts.join(" · ");
   }
 
@@ -755,14 +794,28 @@
   }
   fillProgramTable("programA","A");
   fillProgramTable("programB","B");
-  ["programComplex","complexMovesLog"].forEach(function(id){
-    var tbody = document.getElementById(id);
-    COMPLEX.forEach(function(m, i){
-      var tr = document.createElement("tr");
-      tr.innerHTML = "<td>"+(i+1)+". "+m.name+"</td><td>× "+m.reps+"</td>";
-      tbody.appendChild(tr);
+  function renderComplexTables(){
+    var pt = pushupTarget();
+    ["programComplex","complexMovesLog"].forEach(function(id){
+      var tbody = document.getElementById(id);
+      tbody.innerHTML = "";
+      COMPLEX.forEach(function(m, i){
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>"+(i+1)+". "+m.name+"</td><td>× "+(m.pushup ? pt : m.reps)+"</td>";
+        tbody.appendChild(tr);
+      });
     });
-  });
+    ["programComplexDb","complexDbLog"].forEach(function(id){
+      var tbody = document.getElementById(id);
+      tbody.innerHTML = "";
+      COMPLEX_DB.forEach(function(m){
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>"+m.name+"</td><td>"+m.weight+"kg × "+m.reps+"</td>";
+        tbody.appendChild(tr);
+      });
+    });
+  }
+  renderComplexTables();
 
   // ---------- Next session logic ----------
   function getNextDayType(){
@@ -801,6 +854,14 @@
     document.getElementById("statTennis").textContent = DATA.tennis.length;
     var nComplex = DATA.tennis.filter(isComplex).length;
     document.getElementById("statTennisSplit").textContent = (DATA.tennis.length - nComplex) + " tennis · " + nComplex + " complex";
+
+    var painByDate = {};
+    DATA.sessions.concat(DATA.tennis.filter(isComplex)).forEach(function(x){
+      if(!isNum(x.shoulderPain)) return;
+      painByDate[x.date] = isNum(painByDate[x.date]) ? Math.max(painByDate[x.date], x.shoulderPain) : x.shoulderPain;
+    });
+    var painDates = Object.keys(painByDate).sort();
+    registerRedraw("pain", function(){ drawLineChart("painChart", painDates, painDates.map(function(d){ return painByDate[d]; }), "#B83A3A"); });
 
     var weightS = weighinSeries("weight");
     registerRedraw("weight", function(){ drawLineChart("weightChart", weightS.labels, weightS.values, "#8A1F1F"); });
@@ -926,8 +987,30 @@
     if(/Triceps Extension/.test(name)) return 2;
     return /Squat|Leg Press|Hip Thrust/.test(name) && !/Bulgarian/.test(name) ? 5 : 2.5;
   }
+  // Coach overrides set on 25 Nov 2026. "upTo" ones apply only to sessions logged on or before that date.
+  var OVERRIDES = {
+    "Leg Press Machine":   [{at:130, upTo:"2026-11-25", weight:135,  text:"Hit 11 on the last set at 130kg — go up to 135kg, target 3 × 10."}],
+    "Seated Row Machine":  [{at:66,  upTo:"2026-11-25", weight:68.5, text:"Hit 11 on the last set at 66kg — go up to the next plate (68.5kg), target 3 × 10."}],
+    "Leg Curl Machine":    [{at:65,  upTo:"2026-11-25", weight:67.5, text:"Hit 11 on the last set at 65kg — go up to the next plate (67.5kg), target 3 × 10."}],
+    "Chest Press Machine": [{at:53.2, upTo:"2026-11-25", weight:53.2, text:"Stay at 53.2kg — aim for 3 full sets of 10."}],
+    "Lat Pulldown Machine":[{at:95, upTo:"2026-11-25", weight:90, text:"Drop to 90kg and rebuild to 3 × 10–12 before going back to 95kg."},
+                            {at:90, rebuildTo:95, weight:95, text:"Hit 12 on every set at 90kg — go back up to 95kg."}]
+  };
   function liftProgression(opt, last){
     if(!last || !last.sets.length) return null;
+    var ov = OVERRIDES[opt.name];
+    if(ov){
+      var lastTop = last.sets.reduce(function(mx, st){ return (st.weight || 0) > mx ? (st.weight || 0) : mx; }, 0);
+      for(var i=0; i<ov.length; i++){
+        var o = ov[i];
+        if(Math.abs(lastTop - o.at) > 0.01) continue;
+        if(o.upTo && last.date <= o.upTo) return { text: o.text, weight: o.weight };
+        if(o.rebuildTo){
+          var atW = last.sets.filter(function(st){ return Math.abs((st.weight||0) - o.at) < 0.01 && isNum(st.reps); });
+          if(atW.length >= opt.sets && Math.min.apply(null, atW.map(function(st){ return st.reps; })) >= 12) return { text: o.text, weight: o.weight };
+        }
+      }
+    }
     var range = repRange(opt.target);
     if(!range) return null;
     var done = last.sets.filter(function(st){ return isNum(st.reps); });
@@ -1003,6 +1086,7 @@
       date: document.getElementById("logDate").value || todayISO(),
       dayType: dayKey,
       notes: document.getElementById("logNotes").value,
+      shoulderPain: painVal("logPain"),
       exercises: exercises
     };
     DATA.sessions.push(session);
@@ -1010,6 +1094,7 @@
     document.getElementById("saveSessionMsg").textContent = "Saved.";
     showToast("Session saved");
     document.getElementById("logNotes").value = "";
+    document.getElementById("logPain").value = "";
     setTimeout(function(){ document.getElementById("saveSessionMsg").textContent = ""; renderExerciseInputs(); }, 900);
   });
 
@@ -1056,6 +1141,7 @@
       hint.textContent = "No complex logged yet. Start at 20 kg, 3 min rest, aim for 1 round.";
       document.getElementById("complexWeight").value = 20;
       document.getElementById("complexRest").value = "180";
+      renderComplexRoundInputs();
       return;
     }
     var w = isNum(last.weight) ? last.weight : 20;
@@ -1069,9 +1155,70 @@
       nextW = w + 2.5; nextRest = 180;
       next = "3 rounds on 90 sec — add 2.5–5 kg and go back to 3 min rest.";
     }
-    hint.textContent = "Last: " + last.date + " — " + complexDetail(last) + ". Next: " + next;
+    var pt = pushupTarget();
+    var pushNote = pt === "8–10"
+      ? " Push-ups: target 8–10 per round."
+      : " Push-ups: target 6–8 per round — when you hit 8 in all 3 rounds, the target moves to 8–10.";
+    hint.textContent = "Last: " + last.date + " — " + complexDetail(last) + ". Next: " + next + pushNote;
     document.getElementById("complexWeight").value = nextW;
     document.getElementById("complexRest").value = String(nextRest);
+    renderComplexRoundInputs();
+  }
+
+  function renderComplexRoundInputs(){
+    var n = parseInt(document.getElementById("complexRounds").value, 10);
+    var last = lastComplex();
+    var pt = pushupTarget();
+    var box = document.getElementById("complexRoundInputs");
+    var html = '<div class="slot-block"><div class="ex-name">Push-ups</div><div class="ex-target">Target '+pt+' per round</div>';
+    for(var r=1; r<=n; r++){
+      var lp = last && last.pushups && isNum(last.pushups[r-1]) ? "last " + last.pushups[r-1] : "reps";
+      html += '<div class="sets-row" style="grid-template-columns:auto 1fr"><span>Round '+r+'</span><input type="number" inputmode="numeric" placeholder="'+lp+'" data-cx="pushups" data-round="'+r+'"></div>';
+    }
+    html += '</div>';
+    COMPLEX_DB.forEach(function(m){
+      var prev = last && last.dumbbell ? last.dumbbell[m.key] : null;
+      html += '<div class="slot-block"><div class="ex-name">'+m.name+'</div><div class="ex-target">Target '+m.weight+'kg × '+m.reps+' per round</div>';
+      for(var r=1; r<=n; r++){
+        var ps = prev && prev[r-1] ? prev[r-1] : null;
+        var wPh = ps && isNum(ps.weight) ? "last " + ps.weight + "kg" : m.weight + "kg";
+        var rPh = ps && isNum(ps.reps) ? "last " + ps.reps : m.reps + " reps";
+        html += '<div class="sets-row"><span>Round '+r+'</span>' +
+          '<input type="number" step="0.5" inputmode="decimal" placeholder="'+wPh+'" data-cx="'+m.key+'" data-round="'+r+'" data-field="weight">' +
+          '<input type="number" inputmode="numeric" placeholder="'+rPh+'" data-cx="'+m.key+'" data-round="'+r+'" data-field="reps"></div>';
+      }
+      html += '</div>';
+    });
+    box.innerHTML = html;
+  }
+  document.getElementById("complexRounds").addEventListener("change", renderComplexRoundInputs);
+  function readComplexRounds(){
+    var n = parseInt(document.getElementById("complexRounds").value, 10);
+    var box = document.getElementById("complexRoundInputs");
+    function val(sel){ var el = box.querySelector(sel); return el && el.value !== "" ? parseFloat(el.value) : null; }
+    var pushups = [], dumbbell = {};
+    for(var r=1; r<=n; r++) pushups.push(val('[data-cx="pushups"][data-round="'+r+'"]'));
+    COMPLEX_DB.forEach(function(m){
+      dumbbell[m.key] = [];
+      for(var r=1; r<=n; r++){
+        dumbbell[m.key].push({
+          weight: val('[data-cx="'+m.key+'"][data-round="'+r+'"][data-field="weight"]'),
+          reps: val('[data-cx="'+m.key+'"][data-round="'+r+'"][data-field="reps"]')
+        });
+      }
+    });
+    return {pushups: pushups, dumbbell: dumbbell};
+  }
+  function complexRoundLines(t){
+    var out = [];
+    if(t.dumbbell){
+      COMPLEX_DB.forEach(function(m){
+        var sets = t.dumbbell[m.key] || [];
+        if(!sets.some(function(st){ return isNum(st.weight) || isNum(st.reps); })) return;
+        out.push("  " + m.name + ": " + sets.map(function(st){ return (isNum(st.weight) ? st.weight + "kg" : "–") + "×" + (isNum(st.reps) ? st.reps : "–"); }).join(", "));
+      });
+    }
+    return out;
   }
 
   document.getElementById("complexDate").value = todayISO();
@@ -1086,14 +1233,20 @@
       rounds: parseInt(document.getElementById("complexRounds").value, 10),
       rest: parseInt(document.getElementById("complexRest").value, 10),
       duration: numOrNull("complexTime", true),
+      shoulderPain: painVal("complexPain"),
       notes: document.getElementById("complexNotes").value
     };
+    var rd = readComplexRounds();
+    entry.pushups = rd.pushups;
+    entry.dumbbell = rd.dumbbell;
     DATA.tennis.push(entry);
     saveData();
     document.getElementById("saveComplexMsg").textContent = "Saved.";
     showToast("Complex saved");
     document.getElementById("complexTime").value = "";
     document.getElementById("complexNotes").value = "";
+    document.getElementById("complexPain").value = "";
+    renderComplexTables();
     renderComplexHint();
     setTimeout(function(){ document.getElementById("saveComplexMsg").textContent = ""; }, 900);
   });
@@ -1145,7 +1298,7 @@
   function renderHistory(){
     var list = document.getElementById("historyList");
     var all = [];
-    DATA.sessions.forEach(function(s){ all.push({id:s.id, coll:"sessions", date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.map(function(e){ return e.name; }).join(", ") : " · no exercises")}); });
+    DATA.sessions.forEach(function(s){ all.push({id:s.id, coll:"sessions", date:s.date, kind:"Lift", detail:"Day "+s.dayType+(s.exercises.length ? " · "+s.exercises.map(function(e){ return e.name; }).join(", ") : " · no exercises")+(isNum(s.shoulderPain) ? " · shoulder "+s.shoulderPain+"/10" : "")}); });
     DATA.tennis.forEach(function(t){
       if(isComplex(t)) all.push({id:t.id, coll:"tennis", date:t.date, kind:"Complex", detail:complexDetail(t)+(t.notes ? " · "+t.notes : "")});
       else all.push({id:t.id, coll:"tennis", date:t.date, kind:"Tennis", detail:t.intensity+(t.duration ? " · "+t.duration+" min" : "")+(t.notes ? " · "+t.notes : "")});
@@ -1263,6 +1416,7 @@
           });
           lines.push("  " + e.name + ": " + setStrs.join(", ") + " (volume " + fmtNum(exVolume(e)) + "kg)");
         });
+        if(isNum(s.shoulderPain)){ lines.push("  Shoulder pain: " + s.shoulderPain + "/10"); }
         if(s.notes){ lines.push("  Notes: " + s.notes); }
       });
     }
@@ -1274,7 +1428,10 @@
       lines.push("  None logged in this period.");
     } else {
       tennis.forEach(function(t){
-        if(isComplex(t)) lines.push(t.date + " — Complex: " + complexDetail(t) + (t.notes ? " — " + t.notes : ""));
+        if(isComplex(t)){
+          lines.push(t.date + " — Complex: " + complexDetail(t) + (t.notes ? " — " + t.notes : ""));
+          complexRoundLines(t).forEach(function(l){ lines.push(l); });
+        }
         else lines.push(t.date + " — Tennis: " + t.intensity + (t.duration ? ", " + t.duration + " min" : "") + (t.notes ? " — " + t.notes : ""));
       });
     }
